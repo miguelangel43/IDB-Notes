@@ -311,6 +311,18 @@ $\Longrightarrow$ There is no consistent DB state where T1 is correct!
         - T1 needs to lock the index page with data entries for sex=male
         -  If there are no such records yet, T1 must lock the index page where such a data entry would be created.
 
+**Example: B+ Trees Simple Locking Algorithm**  
+
+- **Search**: We begin at the root and go down. On each level we $rl$ the child and unlock the parent. This until we reach the leaf.
+
+- **Insert/Delete**: We also begin at the root and go down. On each level we $wl$ the child and then check if it is safe. A node is safe if the changes made will not propagate up beyond the node. In insertions, a node is safe if it is not full. In deletions, a node is safe if it not half empty. If the node is safe, then unlock all of its ancestors.
+
+A con of the Simple Locking Algorithm is that the $wl$ that we put on nodes that are not leafs are unnecessary, because only the leaf nodes are modified. The leaf nodes are the only ones that contain data.
+
+<div align="center">
+<img src="src/b_tree.png" width= 350>
+</div>
+
 
 ## Recovery Protocols
 
