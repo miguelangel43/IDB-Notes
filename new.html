@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Implementation of Databases Notes</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Implementation of Databases Notes</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#architecture-of-database-systems">Architecture of Database Systems</a>
+<ul>
+<li><a href="#goals-and-tasks-of-dbms">Goals and Tasks of DBMS</a></li>
+</ul></li>
+<li><a href="#advanced-transaction-management">Advanced Transaction Management</a>
+<ul>
+<li><a href="#definitions">Definitions</a></li>
+<li><a href="#synchronization-problems">Synchronization Problems</a>
+<ul>
+<li><a href="#acid-principle">ACID Principle</a></li>
+</ul></li>
+<li><a href="#serializability-theory">Serializability Theory</a>
+<ul>
+<li><a href="#definitions-1">Definitions</a></li>
+</ul></li>
+<li><a href="#conflict-serializability-classes">Conflict Serializability Classes</a>
+<ul>
+<li><a href="#csr"><span class="math inline"><em>C</em><em>S</em><em>R</em></span></a></li>
+<li><a href="#ocsr"><span class="math inline"><em>O</em><em>C</em><em>S</em><em>R</em></span></a></li>
+<li><a href="#co"><span class="math inline"><em>C</em><em>O</em></span></a></li>
+</ul></li>
+<li><a href="#recovery-theory">Recovery Theory</a>
+<ul>
+<li><a href="#rc"><span class="math inline"><em>R</em><em>C</em></span></a></li>
+<li><a href="#aca"><span class="math inline"><em>A</em><em>C</em><em>A</em></span></a></li>
+<li><a href="#st"><span class="math inline"><em>S</em><em>T</em></span></a></li>
+<li><a href="#rg"><span class="math inline"><em>R</em><em>G</em></span></a></li>
+</ul></li>
+<li><a href="#scheduling-algorithms">Scheduling Algorithms</a>
+<ul>
+<li><a href="#locking-scheduler">Locking Scheduler</a></li>
+<li><a href="#two-phase-locking-2pl">Two Phase Locking (2PL)</a></li>
+<li><a href="#multi-granularity-locking-mgl">Multi-Granularity Locking (MGL)</a></li>
+<li><a href="#index-locking">Index Locking</a></li>
+<li><a href="#b-trees-and-the-simple-locking-algorithm">B+ Trees and the Simple Locking Algorithm</a></li>
+</ul></li>
+<li><a href="#recovery-protocols">Recovery Protocols</a></li>
+</ul></li>
+<li><a href="#relational-queries">Relational Queries</a></li>
+</ul>
+</nav>
+<h1 id="architecture-of-database-systems">Architecture of Database Systems</h1>
+<h2 id="goals-and-tasks-of-dbms">Goals and Tasks of DBMS</h2>
+<ul>
+<li><strong>Data independence</strong> is the main goal of DBMS. It means that data is managed independent of applications. It refers to the immunity of user applications to changes made in the definition and organisation of data. It makes data available for different applications. There are two types of data independences.
+<ul>
+<li><strong>Physical data independence</strong>: logical schema is independent of physical structure, i.e., relational schema is independent of changes on indexes, clustering, etc.</li>
+<li><strong>Logical data independence:</strong> external schema is independent of logical schema, i.e., relational views are defined as derived relations on top of logical schema (the relational schema with the base relations); logical schema might change while external schema does not need to be changed.</li>
+</ul></li>
+<li><strong>Five layers</strong>
+<ul>
+<li><strong>Logical Data Structure</strong> is mainly for translating and optimising queries. The addressing units between this layer and Transaction Programs are views, tuples and tables. The auxiliary structure is external schema description. And the addressing units to the lower level are external records, sets, keys and access paths. The interface between transaction programs or users and Logical Data Structure is Set‐Oriented Interface (SQL).</li>
+<li><strong>Logical Access Structure</strong> is mainly for managing cursors, sorting components and managing dictionaries. The auxiliary structures are access path data and internal schema description. The addressing units to the lower layer are internal records, B* trees and so on. The interface between Logical Data Structure and Logical Access Structure is Record Oriented Interface for offering logical access path to individual records.</li>
+<li><strong>Storage Structure</strong> is responsible for managing records and indexes. The auxiliary structures are DBTT, FPA, page indexes and so on. The addressing units to the lower layer include page and segments. The interface between Logical Access Structure and Storage Structure is Internal Record Interface, in which records are stored in B* tree.<br />
+</li>
+<li><strong>Page Assignment</strong> is for managing buffers and segments. The auxiliary structures are page and block tables. The addressing units to the lower layer include blocks and files. The interface between Storage Structure and Page Assignment is System Buffer Interface.</li>
+<li><strong>Memory Assignment Structure</strong> is responsible for managing files and external memories. The auxiliary structures are VTOC, extent tables and system catalogue. The addressing units to Physical Volume are tracks, cylinders, channels and so on. The interface between Page Assignment and Memory Assignment Structure is File Interface. And the interface between Memory Assignment Structure and Physical Volume is Device Interface.</li>
+</ul></li>
+</ul>
+<div data-align="center">
+<p><img src="src/five_layers.PNG" width=550> <img src="src/five_layers_example.PNG" width=550></p>
+</div>
+<h1 id="advanced-transaction-management">Advanced Transaction Management</h1>
+<h2 id="definitions">Definitions</h2>
+<ol type="1">
+<li><p>A <strong>transaction(TX)</strong> is a DB program, which only consists of read and write operations to a database. These operations are denoted as read(x)or write(x), where xis a DB object.</p></li>
+<li><p>Let <span class="math inline"><em>D</em> = {<em>x</em>, <em>y</em>, <em>z</em>...}</span> be a database. Then a <strong>transaction</strong> <span class="math inline"><em>t</em>(<em>T</em><em>X</em>)</span> is a finite series of operations in the form <span class="math inline"><em>r</em>(<em>x</em>)</span> („read x“) or w(x) („write x“) denoted as <span class="math inline"><em>t</em> = <em>p</em><sub>1</sub>, ..., <em>p</em><sub><em>n</em></sub></span> with <span class="math inline"><em>n</em> &lt; ∞</span>, <span class="math inline"><em>p</em><sub><em>i</em></sub> ∈ {<em>r</em>(<em>x</em>), <em>w</em>(<em>x</em>)}</span> for <span class="math inline">1 ≤ <em>i</em> ≤ <em>n</em></span> and <span class="math inline"><em>x</em> ∈ <em>D</em></span>. Indices are used to distinguish various (concurrent) transactions.</p></li>
+<li><p>Let <span class="math inline"><em>T</em> = {<em>t</em><sub>1</sub>, ..., <em>t</em><sub><em>n</em></sub>}</span> be a (finite) set of transactions. Thus</p>
+<ul>
+<li><span class="math inline"><em>s</em><em>h</em><em>u</em><em>f</em><em>f</em><em>l</em><em>e</em>(<em>T</em>)</span> is the Shuffle Product of <span class="math inline"><em>T</em></span>. (the sum of all ways of interlacing them, e.g. <span class="math inline"><em>a</em><em>b</em> ⋅ <em>x</em><em>y</em> = <em>a</em><em>b</em><em>x</em><em>y</em> + <em>a</em><em>x</em><em>b</em><em>y</em> + <em>x</em><em>a</em><em>b</em><em>y</em> + <em>a</em><em>x</em><em>y</em><em>b</em> + <em>x</em><em>a</em><em>y</em><em>b</em> + <em>x</em><em>y</em><em>a</em><em>b</em></span>)</li>
+<li>a <strong>complete schedule</strong> <span class="math inline"><em>s</em></span> for <span class="math inline"><em>T</em></span> is a serie <span class="math inline"><em>s</em>′ ∈ <em>s</em><em>h</em><em>u</em><em>f</em><em>f</em><em>l</em><em>e</em>(<em>T</em>)</span> with the additional pseudo actions <span class="math inline"><em>c</em><sub><em>i</em></sub></span> (commit) and <span class="math inline"><em>a</em><sub><em>i</em></sub></span> (abort) for each <span class="math inline"><em>t</em><sub><em>i</em></sub> ∈ <em>T</em></span> according to the following rules:
+<ol type="1">
+<li><span class="math inline">(∀<em>i</em>, 1 ≤ <em>i</em> ≤ <em>n</em>)<em>c</em><sub><em>i</em></sub> ∈ <em>s</em> ⇔ <em>a</em><sub><em>i</em></sub> ∉ <em>s</em></span></li>
+<li><span class="math inline">(∀<em>i</em>, 1 ≤ <em>i</em> ≤ <em>n</em>)<em>c</em><sub><em>i</em></sub></span> or <span class="math inline"><em>a</em><sub><em>i</em></sub></span> are in <span class="math inline"><em>s</em></span>, whereever, but after the last action of <span class="math inline"><em>t</em><sub><em>i</em></sub></span></li>
+</ol></li>
+<li><span class="math inline"><em>s</em><em>h</em><em>u</em><em>f</em><em>f</em><em>l</em><em>e</em><sub><em>a</em><em>c</em></sub>(<em>T</em>)</span> is the set of all complete schedules</li>
+<li>a <strong>schedule</strong> is a prefix of a complete schedule</li>
+<li>a complete schedule is <strong>serial,</strong> if for a permutation <span class="math inline"><em>ρ</em></span> from {1,…,n} it holds that all the transactions run one after the other without any interference with one another (no e.g. dirty read) they are terrible from a performance point of view because we have to wait until a transaction finishes executing to execute the next one: <span class="math display"><em>s</em> = <em>t</em><sub><em>ρ</em>(1)</sub>...<em>t</em><sub><em>ρ</em>(<em>n</em>)</sub></span></li>
+</ul></li>
+<li><p>Notation for Schedule s</p>
+<ul>
+<li><p>trans(s) = <span class="math inline">{<em>t</em><sub><em>i</em></sub>|<em>s</em> contains actions of <em>t</em><sub><em>i</em></sub>}</span></p></li>
+<li><p>commit(s) = <span class="math inline">{<em>t</em><sub><em>i</em></sub> ∈  trans(s) |<em>c</em><sub><em>i</em></sub> ∈ <em>s</em>}</span></p></li>
+<li><p>abort(s)= <span class="math inline">{<em>t</em><sub><em>i</em></sub> ∈  trans(s) |<em>a</em><sub><em>i</em></sub> ∈ <em>s</em>}</span></p></li>
+<li><p>active(s)= trans(s) – (commit(s) <span class="math inline">∪</span> abort(s))</p></li>
+<li><p>op(s) = set of all the actions occurring in s</p></li>
+</ul></li>
+</ol>
+<h2 id="synchronization-problems">Synchronization Problems</h2>
+<ul>
+<li>Lost update
+<div data-align="center">
+<p><img src="src/lost_update.PNG" width=550></p>
+</div></li>
+<li>Dirty read
+<div data-align="center">
+<p><img src="src/dirty_read.PNG" width=550></p>
+</div></li>
+<li>Non-repeatable read/Inconsistent read
+<div data-align="center">
+<p><img src="src/non_repeat.PNG" width=550></p>
+</div></li>
+<li>Phantom Problem
+<div data-align="center">
+<p><img src="src/phantom_problem.PNG" width=550></p>
+</div></li>
+</ul>
+<h3 id="acid-principle">ACID Principle</h3>
+<p>Every transaction must be processed in the way that the ACID properties are preserved.</p>
+<ul>
+<li><strong>Atomicity</strong>: In an execution of a transaction, either all operations are carried out, or none are.</li>
+<li><strong>Consistency</strong>: Preservation of all integrity constraints of the DB, i.e. a transaction starts with a consistent DB state, and after the execution of the transaction the DB state is consistent as well.</li>
+<li><strong>Isolation</strong>: Isolated execution of a transaction, i.e. „as if executed solely“</li>
+<li><strong>Durability</strong>: Once a transaction has been successfully completed, its effects should persist even if the system crashes before all its changes</li>
+</ul>
+<h2 id="serializability-theory">Serializability Theory</h2>
+<h3 id="definitions-1">Definitions</h3>
+<p>Let <span class="math inline"><em>s</em></span> and <span class="math inline"><em>s</em>′</span> be schedules. <span class="math inline"><em>s</em></span> and <span class="math inline"><em>s</em>′</span> are called <strong>final-state equivalent,</strong> denoted as <span class="math inline"><em>s</em>≈<sub><em>f</em></sub><em>s</em>′</span>, if <span class="math inline"><em>o</em><em>p</em>(<em>s</em>) = <em>o</em><em>p</em>(<em>s</em>′)</span> and all DB objects have at the end identical values in <span class="math inline"><em>s</em></span> and <span class="math inline"><em>s</em>′</span>, according to the abstract semantics.</p>
+<p>A schedule <span class="math inline"><em>s</em></span> is called <strong>final-state serializable</strong> if there exists a serial schedule <span class="math inline"><em>s</em>′</span> which is final-state equivalent to <span class="math inline"><em>s</em></span>. <span class="math inline"><em>F</em><em>S</em><em>R</em></span> is the class of all final-state serializable schedules.</p>
+<p><strong>Example 1:</strong><br />
+<span class="math inline"><em>s</em> = <em>r</em>1(<em>x</em>)<em>r</em>2(<em>y</em>)<em>w</em>1(<em>y</em>)<em>r</em>3(<em>z</em>)<em>w</em>3(<em>z</em>)<em>r</em>2(<em>x</em>)<em>w</em>2(<em>z</em>)<em>w</em>1(<em>x</em>)</span> and<br />
+<span class="math inline"><em>s</em>′ = <em>r</em>3(<em>z</em>)<em>w</em>3(<em>z</em>)<em>r</em>2(<em>y</em>)<em>r</em>2(<em>x</em>)<em>w</em>2(<em>z</em>)<em>r</em>1(<em>x</em>)<em>w</em>1(<em>y</em>)<em>w</em>1(<em>x</em>)</span>.</p>
+<p>In <span class="math inline"><em>s</em></span>: <span class="math inline"><em>x</em> = <em>f</em><sub>1<em>x</em></sub>(<em>x</em><sub>0</sub>)</span> <span class="math inline"><em>y</em> = <em>f</em><sub>1<em>y</em></sub>(<em>x</em><sub>0</sub>)</span> <span class="math inline"><em>z</em> = <em>f</em><sub>2<em>z</em></sub>(<em>x</em><sub>0</sub>, <em>y</em><sub>0</sub>)</span><br />
+In <span class="math inline"><em>s</em>′</span>: <span class="math inline"><em>x</em> = <em>f</em><sub>1<em>x</em></sub>(<em>x</em><sub>0</sub>)</span> <span class="math inline"><em>y</em> = <em>f</em><sub>1<em>y</em></sub>(<em>x</em><sub>0</sub>)</span> <span class="math inline"><em>z</em> = <em>f</em><sub>2<em>z</em></sub>(<em>x</em><sub>0</sub>, <em>y</em><sub>0</sub>)</span><br />
+<span class="math inline"> ⇒ <em>s</em>≈<sub><em>f</em></sub><em>s</em>′ ⇒ <em>s</em> ∈ <em>F</em><em>S</em><em>R</em></span></p>
+<p><strong>Example 2:</strong><br />
+<span class="math inline"><em>s</em> = <em>r</em><sub>1</sub>(<em>x</em>)<em>r</em><sub>2</sub>(<em>y</em>)<em>w</em><sub>1</sub>(<em>y</em>)<em>w</em><sub>2</sub>(<em>y</em>)<em>c</em><sub>1</sub><em>c</em><sub>2</sub></span><br />
+<span class="math inline"><em>s</em>′ = <em>r</em><sub>1</sub>(<em>x</em>)<em>w</em><sub>1</sub>(<em>y</em>)<em>r</em><sub>2</sub>(<em>y</em>)<em>w</em><sub>2</sub>(<em>y</em>)<em>c</em><sub>2</sub><em>c</em><sub>1</sub></span></p>
+<p>In <span class="math inline"><em>s</em> : <em>y</em> = <em>f</em><sub>2<em>y</em></sub>(<em>y</em><sub>0</sub>)</span><br />
+In <span class="math inline"><em>s</em>′ : <em>y</em> = <em>f</em><sub>2<em>y</em></sub>(<em>f</em><sub>1<em>y</em></sub>(<em>x</em><sub>0</sub>))</span><br />
+<span class="math inline"> ⇒ <em>s</em></span> <span class="math inline">≈<sub><em>f</em></sub><em>s</em>′ ⇒ <em>s</em> ∉ <em>F</em><em>S</em><em>R</em></span> <!-- pandoc doesn't properly read \not --></p>
+<h2 id="conflict-serializability-classes">Conflict Serializability Classes</h2>
+<p>Let <span class="math inline"><em>s</em></span> be a schedule, <span class="math inline"><em>t</em>, <em>t</em>′∈</span> trans(s) and <span class="math inline"><em>t</em> ≠ <em>t</em>′</span>:</p>
+<ul>
+<li>Two data operations <span class="math inline"><em>p</em> ∈ <em>t</em></span> and <span class="math inline"><em>q</em> ∈ <em>t</em>′</span> in <span class="math inline"><em>s</em></span> are in <strong>conflict,</strong> if they operate on the same object and at least one of them is a write operation.</li>
+<li><span class="math inline"><em>C</em>(<em>s</em>) = {(<em>p</em>, <em>q</em>)|<em>p</em>, <em>q</em></span> in <span class="math inline"><em>s</em></span> are in conflict and <span class="math inline"><em>p</em></span> is before <span class="math inline"><em>q</em></span> in <span class="math inline"><em>s</em>}</span> are the <strong>conflict relations</strong> of s.</li>
+</ul>
+<p><strong>Example</strong><br />
+Let <span class="math inline"><em>s</em> = <em>w</em><sub>1</sub>(<em>x</em>)<em>r</em><sub>2</sub>(<em>x</em>)<em>w</em><sub>2</sub>(<em>y</em>)<em>r</em><sub>1</sub>(<em>y</em>)<em>w</em><sub>1</sub>(<em>y</em>)<em>w</em><sub>3</sub>(<em>x</em>)<em>w</em><sub>3</sub>(<em>y</em>)<em>c</em><sub>1</sub><em>a</em><sub>2</sub></span>.</p>
+<p>Then: <span class="math inline"><em>C</em>(<em>s</em>)</span> = {(<span class="math inline"><em>w</em><sub>1</sub>(<em>x</em>)</span>, <span class="math inline"><em>r</em><sub>2</sub>(<em>x</em>)</span>), (<span class="math inline"><em>w</em><sub>1</sub>(<em>x</em>)</span>, <span class="math inline"><em>w</em><sub>3</sub>(<em>x</em>)</span>), (<span class="math inline"><em>r</em><sub>2</sub>(<em>x</em>)</span>, <span class="math inline"><em>w</em><sub>3</sub>(<em>x</em>)</span>), (<span class="math inline"><em>w</em><sub>2</sub>(<em>y</em>)</span>, <span class="math inline"><em>r</em><sub>1</sub>(<em>y</em>)</span>), (<span class="math inline"><em>w</em><sub>2</sub>(<em>y</em>)</span>, <span class="math inline"><em>w</em><sub>1</sub>(<em>y</em>)</span>), (<span class="math inline"><em>w</em><sub>2</sub>(<em>y</em>)</span>, <span class="math inline"><em>w</em><sub>3</sub>(<em>y</em>)</span>), (<span class="math inline"><em>r</em><sub>1</sub>(<em>y</em>)</span>, <span class="math inline"><em>w</em><sub>3</sub>(<em>y</em>)</span>), (<span class="math inline"><em>w</em><sub>1</sub>(<em>y</em>)</span>, <span class="math inline"><em>w</em><sub>3</sub>(<em>y</em>)</span>)}.</p>
+<p><span class="math inline"> ⇒ <em>c</em><em>o</em><em>n</em><em>f</em>(<em>s</em>) = (<em>w</em><sub>1</sub>(<em>x</em>), <em>w</em><sub>3</sub>(<em>x</em>)), (<em>r</em><sub>1</sub>(<em>y</em>), <em>w</em><sub>3</sub>(<em>y</em>)), (<em>w</em><sub>1</sub>(<em>y</em>), <em>w</em><sub>3</sub>(<em>y</em>)).</span> Conflict relations with an operation of transaction 2 have been removed.</p>
+<p><span class="math inline"><em>c</em><em>o</em><em>n</em><em>f</em>(<em>s</em>)</span> denotes the conflict relations of a schedule s, which are cleaned up by aborted transactions.</p>
+<p>Three Serializability classes will be presented: <span class="math inline"><em>C</em><em>S</em><em>R</em></span>, <span class="math inline"><em>O</em><em>C</em><em>S</em><em>R</em></span> and <span class="math inline"><em>C</em><em>O</em></span>.</p>
+<div data-align="center">
+<p><img src="src/sum_csr.png" width=440></p>
+</div>
+<h3 id="csr"><span class="math inline"><em>C</em><em>S</em><em>R</em></span></h3>
+<ul>
+<li><p>Let <span class="math inline"><em>s</em></span> and <span class="math inline"><em>s</em>′</span> be two schedules. <span class="math inline"><em>s</em></span> and <span class="math inline"><em>s</em>′</span> are called <strong>conflict equivalent</strong>, denoted as <span class="math inline"><em>s</em>≈<sub><em>c</em></sub><em>s</em>′</span>, if:</p>
+<ul>
+<li><span class="math inline"><em>o</em><em>p</em>(<em>s</em>) = <em>o</em><em>p</em>(<em>s</em>′)</span> and</li>
+<li><span class="math inline"><em>c</em><em>o</em><em>n</em><em>f</em>(<em>s</em>) = <em>c</em><em>o</em><em>n</em><em>f</em>(<em>s</em>′)</span>.</li>
+</ul></li>
+<li><p>A complete schedule <span class="math inline"><em>s</em></span> is called <strong>conflict serializable</strong>, if a serial schedule <span class="math inline"><em>s</em>′</span> exists with <span class="math inline"><em>s</em>≈<sub><em>c</em></sub><em>s</em>′</span>.</p></li>
+<li><p>The <strong>conflict graph</strong></p></li>
+</ul>
+<div data-align="center">
+<p><img src="src/graph.png" width=350></p>
+</div>
+<p><strong>Theorem 2.2</strong>:<br />
+<span class="math inline"><em>s</em> ∈ <em>C</em><em>S</em><em>R</em> ⇔ <em>G</em>(<em>s</em>)</span> is acyclic.<br />
+(Because the transitions can be ordered <span class="math inline"><em>t</em><sub>2</sub>, <em>t</em><sub>1</sub>, <em>t</em><sub>3</sub></span> in the example)<br />
+<strong>Membership</strong> in CSR can be tested in polynominal time</p>
+<h3 id="ocsr"><span class="math inline"><em>O</em><em>C</em><em>S</em><em>R</em></span></h3>
+<p>A complete schedule s is called <strong>order-preserving conflict serializable</strong>, there exists a serial schedule <span class="math inline"><em>s</em>′</span> with <span class="math inline"><em>s</em>≈<sub><em>c</em></sub><em>s</em>’</span> and the following holds for all <span class="math inline"><em>t</em>, <em>t</em>′ ∈ <em>t</em><em>r</em><em>a</em><em>n</em><em>s</em>(<em>s</em>)</span>:<br />
+If <span class="math inline"><em>t</em></span> occurs completely before <span class="math inline"><em>t</em>′</span> in <span class="math inline"><em>s</em></span>, then the same holds in <span class="math inline"><em>s</em>′</span>.</p>
+<h3 id="co"><span class="math inline"><em>C</em><em>O</em></span></h3>
+<p>A schedule s is called <strong>commit order-preserving conflict serializable</strong> (or owns the property of <strong>commit order preservation</strong>), if the following holds:<br />
+For all <span class="math inline"><em>t</em><sub><em>i</em></sub>, <em>t</em><sub><em>j</em></sub> ∈ <em>c</em><em>o</em><em>m</em><em>m</em><em>i</em><em>t</em>(<em>s</em>), <em>i</em> ≠ <em>j</em></span>, with <span class="math inline">(<em>p</em>, <em>q</em>) ∈ <em>c</em><em>o</em><em>n</em><em>f</em>(<em>s</em>)</span> for <span class="math inline"><em>p</em> ∈ <em>t</em><sub><em>i</em></sub>, <em>q</em> ∈ <em>t</em><sub><em>j</em></sub></span>,<br />
+then : <span class="math inline"><em>c</em><sub><em>i</em></sub></span> is before <span class="math inline"><em>c</em><sub><em>j</em></sub></span> in <span class="math inline"><em>s</em></span>.</p>
+<h2 id="recovery-theory">Recovery Theory</h2>
+<div data-align="center">
+<p><img src="src/sum_strict.png" width= 350></p>
+</div>
+<h3 id="rc"><span class="math inline"><em>R</em><em>C</em></span></h3>
+<p>A schedule s is called <strong>recoverable</strong>, if the following holds:<br />
+<span class="math inline">(∀<em>t</em><sub><em>i</em></sub>, <em>t</em><sub><em>j</em></sub> ∈ <em>t</em><em>r</em><em>a</em><em>n</em><em>s</em>(<em>s</em>), <em>i</em> ≠ <em>j</em>)</span> <span class="math inline"><em>t</em><sub><em>i</em></sub></span> reads from <span class="math inline"><em>t</em><sub><em>j</em></sub></span> in <span class="math inline"><em>s</em></span> <span class="math inline"> ∧ <em>c</em><sub><em>i</em></sub> ∈ <em>s</em> ⇒ <em>c</em><sub><em>j</em></sub>&lt;<sub><em>s</em></sub><em>c</em><sub><em>i</em></sub></span><br />
+(If transaction 2 reads from transaction 1, then transaction 1 commits before transaction 2)<br />
+„Every transaction will not be released, until all other transactions from which it has read, are released.“</p>
+<p><strong>Example</strong>:<br />
+Let <span class="math inline"><em>s</em>1 = <em>w</em><sub>1</sub>(<em>x</em>)<em>w</em><sub>1</sub>(<em>y</em>)<em>r</em><sub>2</sub>(<em>u</em>)<em>w</em><sub>2</sub>(<em>x</em>)<em>r</em><sub>2</sub>(<em>y</em>)<em>w</em><sub>2</sub>(<em>y</em>)<em>c</em><sub>2</sub><em>w</em><sub>1</sub>(<em>z</em>)<em>c</em><sub>1</sub></span><br />
+It holds: <span class="math inline"><em>t</em><sub>2</sub></span> reads <span class="math inline"><em>y</em></span> from <span class="math inline"><em>t</em><sub>1</sub></span> and <span class="math inline"><em>c</em><sub>2</sub> ∈ <em>s</em></span>, but <span class="math inline"><em>c</em><sub>1</sub> ≮ <em>c</em><sub>2</sub></span>. Consequently <span class="math inline"><em>s</em><sub>1</sub> ∉ <em>R</em><em>C</em></span></p>
+<p>Let <span class="math inline"><em>s</em><sub>2</sub> = <em>w</em><sub>1</sub>(<em>x</em>)<em>w</em><sub>1</sub>(<em>y</em>)<em>r</em><sub>2</sub>(<em>u</em>)<em>w</em><sub>2</sub>(<em>x</em>)<em>r</em><sub>2</sub>(<em>y</em>)<em>w</em><sub>2</sub>(<em>y</em>)<em>w</em><sub>1</sub>(<em>z</em>)<em>c</em><sub>1</sub><em>c</em><sub>2</sub></span><br />
+It holds: <span class="math inline"><em>s</em><sub>2</sub> ∈ <em>R</em><em>C</em></span>, because the commit operation of <span class="math inline"><em>t</em><sub>2</sub></span> is after the one of <span class="math inline"><em>t</em><sub>1</sub></span> , but the abort of <span class="math inline"><em>t</em><sub>1</sub></span> leads to the abort of <span class="math inline"><em>t</em><sub>2</sub></span>, this may give rise to cascading aborts.</p>
+<h3 id="aca"><span class="math inline"><em>A</em><em>C</em><em>A</em></span></h3>
+<p>A schedule <span class="math inline"><em>s</em></span> <strong>avoids cascading aborts</strong>, if it holds:<br />
+<span class="math inline">(∀<em>t</em><sub><em>i</em></sub>, <em>t</em><sub><em>j</em></sub> ∈ <em>t</em><em>r</em><em>a</em><em>n</em><em>s</em>(<em>s</em>), <em>i</em> ≠ <em>j</em>)</span> <span class="math inline"><em>t</em><sub><em>i</em></sub></span> reads <span class="math inline"><em>x</em></span> from <span class="math inline"><em>t</em><sub><em>j</em></sub></span> in <span class="math inline"><em>s</em></span> <span class="math inline"> ⇒ <em>c</em><sub><em>j</em></sub>&lt;<sub><em>s</em></sub><em>r</em><sub><em>i</em></sub>(<em>x</em>)</span><br />
+„A transaction is only allowed to read values from already successfully completed transactions.“</p>
+<p><strong>Example</strong>:<br />
+<span class="math inline"><em>s</em>2 = <em>w</em>1(<em>x</em>)<em>w</em>1(<em>y</em>)<em>r</em>2(<em>u</em>)<em>w</em>2(<em>x</em>)<em>r</em>2(<em>y</em>)<em>w</em>2(<em>y</em>)<em>w</em>1(<em>z</em>)<em>c</em>1<em>c</em>2 ∉ <em>A</em><em>C</em><em>A</em></span><br />
+<span class="math inline"><em>s</em>3 = <em>w</em>1(<em>x</em>)<em>w</em>1(<em>y</em>)<em>r</em>2(<em>u</em>)<em>w</em>2(<em>x</em>)<em>w</em>1(<em>z</em>)<em>c</em>1<em>r</em>2(<em>y</em>)<em>w</em>2(<em>y</em>)<em>c</em>2 ∈ <em>A</em><em>C</em><em>A</em></span><br />
+Further problem: The values, which are restored after an abort, may be different from the Before Images of the write operations of the aborting transactions.</p>
+<h3 id="st"><span class="math inline"><em>S</em><em>T</em></span></h3>
+<p>A schedule <span class="math inline"><em>s</em></span> is called <strong>strict</strong>, if the following holds:<br />
+<span class="math inline">(∀<em>t</em><sub><em>i</em></sub> ∈ <em>t</em><em>r</em><em>a</em><em>n</em><em>s</em>(<em>s</em>))(∀<em>p</em><sub><em>i</em></sub>(<em>x</em>) ∈ <em>o</em><em>p</em>(<em>t</em><sub><em>i</em></sub>), <em>p</em> ∈ <em>r</em>, <em>w</em>)</span><br />
+<span class="math inline"><em>w</em><sub><em>j</em></sub>(<em>x</em>)&lt;<sub><em>s</em></sub><em>p</em><sub><em>i</em></sub>(<em>x</em>), <em>i</em> ≠ <em>j</em> ⇒ <em>a</em><sub><em>j</em></sub>&lt;<sub><em>s</em></sub><em>p</em><sub><em>i</em></sub>(<em>x</em>) ∨ <em>c</em><sub><em>j</em></sub>&lt;<sub><em>s</em></sub><em>p</em><sub><em>i</em></sub>(<em>x</em>)</span><br />
+„A schedule is strict, if an object is not read or overwritten, until the transction, which has written it at last, is terminated.“ (Same as before but now also with the write operation)</p>
+<p><strong>Example</strong>:<br />
+<span class="math inline"><em>s</em><sub>3</sub> = <em>w</em><sub>1</sub>(<em>x</em>)<em>w</em><sub>1</sub>(<em>y</em>)<em>r</em><sub>2</sub>(<em>u</em>)<em>w</em><sub>2</sub>(<em>x</em>)<em>w</em><sub>1</sub>(<em>z</em>)<em>c</em><sub>1</sub><em>r</em><sub>2</sub>(<em>y</em>)<em>w</em><sub>2</sub>(<em>y</em>)<em>c</em><sub>2</sub> ∉ <em>S</em><em>T</em></span><br />
+<span class="math inline"><em>s</em><sub>4</sub> = <em>w</em><sub>1</sub>(<em>x</em>)<em>w</em><sub>1</sub>(<em>y</em>)<em>r</em><sub>2</sub>(<em>u</em>)<em>w</em><sub>1</sub>(<em>z</em>)<em>c</em><sub>1</sub><em>w</em><sub>2</sub>(<em>x</em>)<em>r</em><sub>2</sub>(<em>y</em>)<em>w</em><sub>2</sub>(<em>y</em>)<em>c</em><sub>2</sub> ∈ <em>S</em><em>T</em></span></p>
+<h3 id="rg"><span class="math inline"><em>R</em><em>G</em></span></h3>
+<p>A schedule <span class="math inline"><em>s</em></span> is called <strong>rigorous</strong>, if it is strict and satisfies the following condition:<br />
+<span class="math inline">(∀<em>t</em><sub><em>i</em></sub>, <em>t</em><sub><em>j</em></sub> ∈ <em>t</em><em>r</em><em>a</em><em>n</em><em>s</em>(<em>s</em>))<em>r</em><sub><em>j</em></sub>(<em>x</em>)&lt;<sub><em>s</em></sub><em>w</em><sub><em>i</em></sub>(<em>x</em>), <em>i</em> ≠ <em>j</em> ⇒ <em>a</em><sub><em>j</em></sub>&lt;<sub><em>s</em></sub><em>w</em><sub><em>i</em></sub>(<em>x</em>) ∨ <em>c</em><sub><em>j</em></sub>&lt;<sub><em>s</em></sub><em>w</em><sub><em>i</em></sub>(<em>x</em>)</span><br />
+„A schedule is rigorous, if it is strict and no object x is overwritten, until all transactions, which have read x at last, are terminated.“</p>
+<ul>
+<li>A schedule from ST avoids Write-Read- as well as Write-Write conflicts between non-released transactions</li>
+<li>A schedule from RG avoids additionally Read-Write conflicts between those kinds of transactions.</li>
+</ul>
+<h2 id="scheduling-algorithms">Scheduling Algorithms</h2>
+<p>Techniques with which a DBMS can generate correct schedules for transactions to be processed; these are called scheduling protocols, or in short <strong>scheduler</strong>. A scheduler gets as input a sequence of operations (r,w,a,c) and it must produce a correct output schedule from them.</p>
+<h3 id="locking-scheduler">Locking Scheduler</h3>
+<p>The scheduler can apply locks for the synchronization of accesses on data objects that are used together. There are two types of locks for an object x: - Read lock: rl(x) <em>read lock</em>, ru(x) <em>read unlock</em> - Write lock: wl(x) <em>read lock</em>, wu(x) <em>read unlock</em></p>
+<p><strong>Rules for the application of locks</strong><br />
+For each <span class="math inline"><em>t</em><sub><em>i</em></sub></span>, which is contained completely in a schedule <span class="math inline"><em>s</em></span>, the following should be valid: 1. If <span class="math inline"><em>t</em><sub><em>i</em></sub></span> contains a <span class="math inline"><em>r</em><sub><em>i</em></sub>(<em>x</em>)[<em>w</em><sub><em>i</em></sub>(<em>x</em>)]</span>, thus <span class="math inline"><em>r</em><em>l</em><sub><em>i</em></sub>(<em>x</em>)[<em>w</em><em>l</em><sub><em>i</em></sub>(<em>x</em>)]</span> stands anywhere before it in <span class="math inline"><em>s</em></span> and <span class="math inline"><em>r</em><em>u</em><sub><em>i</em></sub>(<em>x</em>)[<em>w</em><em>u</em><sub><em>i</em></sub>(<em>x</em>)]</span> stands anywhere after it. 2. For each <span class="math inline"><em>x</em></span> processed by <span class="math inline"><em>t</em><sub><em>i</em></sub></span> there are exactly one <span class="math inline"><em>r</em><em>l</em><sub><em>i</em></sub>(<em>x</em>)</span> resp. <span class="math inline"><em>w</em><em>l</em><sub><em>i</em></sub>(<em>x</em>)</span> in <span class="math inline"><em>s</em></span> 3. No <span class="math inline"><em>r</em><em>u</em><sub><em>i</em></sub>/<em>w</em><em>u</em><sub><em>i</em></sub></span> is redundant</p>
+<p><strong>Examples:</strong><br />
+<span class="math inline"><em>s</em><sub>1</sub> = <em>r</em><em>l</em><sub>1</sub>(<em>x</em>)<em>r</em><sub>1</sub>(<em>x</em>)<em>r</em><em>u</em><sub>1</sub>(<em>x</em>)<em>w</em><em>l</em><sub>2</sub>(<em>x</em>)<em>w</em><sub>2</sub>(<em>x</em>)<em>w</em><em>l</em><sub>2</sub>(<em>y</em>)<em>w</em><sub>2</sub>(<em>y</em>)<em>w</em><em>u</em><sub>2</sub>(<em>x</em>)<em>w</em><em>u</em><sub>2</sub>(<em>y</em>)<em>c</em><sub>2</sub><em>w</em><em>l</em><sub>1</sub>(<em>y</em>)<em>w</em><sub>1</sub>(<em>y</em>)<em>w</em><em>u</em><sub>1</sub>(<em>y</em>)<em>c</em><sub>1</sub></span><br />
+<span class="math inline"><em>s</em><sub>2</sub> = <em>r</em><em>l</em><sub>1</sub>(<em>x</em>)<em>r</em><sub>1</sub>(<em>x</em>)<em>w</em><em>l</em><sub>1</sub>(<em>y</em>)<em>w</em><sub>1</sub>(<em>y</em>)<em>r</em><em>u</em><sub>1</sub>(<em>x</em>)<em>w</em><em>u</em><sub>1</sub>(<em>y</em>)<em>c</em><sub>1</sub><em>w</em><em>l</em><sub>2</sub>(<em>x</em>)<em>w</em><sub>2</sub>(<em>x</em>)<em>w</em><em>l</em><sub>2</sub>(<em>y</em>)<em>w</em><sub>2</sub>(<em>y</em>)<em>w</em><em>u</em><sub>2</sub>(<em>x</em>)<em>w</em><em>u</em><sub>2</sub>(<em>y</em>)<em>c</em><sub>2</sub></span></p>
+<p>A scheduler <strong>works according to a locking protocol</strong>, if for every output <span class="math inline"><em>s</em></span> and every <span class="math inline"><em>t</em><sub><em>i</em></sub> ∈ <em>t</em><em>r</em><em>a</em><em>n</em><em>s</em>(<em>s</em>)</span> it holds: - <span class="math inline"><em>t</em><sub><em>i</em></sub></span> satisfies the rules 1. to 3 for the application of locks. - If <span class="math inline"><em>x</em></span> is locked by <span class="math inline"><em>t</em><sub><em>i</em></sub></span> and <span class="math inline"><em>t</em><sub><em>j</em></sub>, <em>t</em><sub><em>i</em></sub>, <em>t</em><sub><em>j</em></sub> ∈ <em>t</em><em>r</em><em>a</em><em>n</em><em>s</em>(<em>s</em>), <em>i</em> ≠ <em>j</em></span>, then these locks are compatible</p>
+<h3 id="two-phase-locking-2pl">Two Phase Locking (2PL)</h3>
+<p>A locking protocol is <strong>two phase</strong>, if for every generated schedule <span class="math inline"><em>s</em></span> and every transaction <span class="math inline"><em>t</em><sub><em>i</em></sub> ∈ <em>t</em><em>r</em><em>a</em><em>n</em><em>s</em>(<em>s</em>)</span> it holds:<br />
+After the first <span class="math inline"><em>o</em><em>u</em><sub><em>i</em></sub></span> action there is no further <span class="math inline"><em>q</em><em>l</em><sub><em>i</em></sub></span> action <span class="math inline">(<em>o</em>, <em>q</em> ∈ {<em>r</em>, <em>w</em>})</span>. Such a scheduler is called a <strong>2PL scheduler</strong>.<br />
+“In the first phase of a transaction locks will only be set, in the second phase locks will only be removed.”</p>
+<p><strong>Examples</strong>:<br />
+<span class="math inline"><em>s</em><sub>1</sub> = <em>r</em><em>l</em><sub>1</sub>(<em>x</em>)<em>r</em><sub>1</sub>(<em>x</em>)<em>r</em><em>u</em><sub>1</sub>(<em>x</em>)<em>w</em><em>l</em><sub>2</sub>(<em>x</em>)<em>w</em><sub>2</sub>(<em>x</em>)<em>w</em><em>l</em><sub>2</sub>(<em>y</em>)<em>w</em><sub>2</sub>(<em>y</em>)<em>w</em><em>u</em><sub>2</sub>(<em>x</em>)<em>w</em><em>u</em><sub>2</sub>(<em>y</em>)<em>c</em><sub>2</sub><em>w</em><em>l</em><sub>1</sub>(<em>y</em>)<em>w</em><sub>1</sub>(<em>y</em>)<em>w</em><em>u</em><sub>1</sub>(<em>y</em>)<em>c</em><sub>1</sub></span><br />
+<span class="math inline"><em>s</em><sub>1</sub></span> is not 2PL. <span class="math inline"><em>s</em><sub>2</sub> = <em>r</em><em>l</em><sub>1</sub>(<em>x</em>)<em>r</em><sub>1</sub>(<em>x</em>)<em>w</em><em>l</em><sub>1</sub>(<em>y</em>)<em>w</em><sub>1</sub>(<em>y</em>)<em>r</em><em>u</em><sub>1</sub>(<em>x</em>)<em>w</em><em>u</em><sub>1</sub>(<em>y</em>)<em>c</em><sub>1</sub><em>w</em><em>l</em><sub>2</sub>(<em>x</em>)<em>w</em><sub>2</sub>(<em>x</em>)<em>w</em><em>l</em><sub>2</sub>(<em>y</em>)<em>w</em><sub>2</sub>(<em>y</em>)<em>w</em><em>u</em><sub>2</sub>(<em>x</em>)<em>w</em><em>u</em><sub>2</sub>(<em>y</em>)<em>c</em><sub>2</sub></span><br />
+<span class="math inline"><em>s</em><sub>2</sub></span> is 2PL</p>
+<p><strong>Theorem 2.2</strong><br />
+<span class="math inline"><em>ε</em>(2<em>P</em><em>L</em>) ⊆ <em>C</em><em>S</em><em>R</em></span></p>
+<p><strong>Variants of 2PL</strong> - Conservative 2PL : All locks are available since BOT - Strict 2PL (S2PL): Hold all write locks till EOT - Strong 2PL (SS2PL): Hold all locks till EOT</p>
+<p><strong>Theorem 2.3</strong><br />
+<span class="math inline"><em>ε</em>(<em>S</em>2<em>P</em><em>L</em>) ⊆ <em>C</em><em>S</em><em>R</em> ∩ <em>S</em><em>T</em></span></p>
+<h3 id="multi-granularity-locking-mgl">Multi-Granularity Locking (MGL)</h3>
+<div data-align="center">
+<p><img src="src/mgl_tree.png" width=400></p>
+</div>
+<ul>
+<li>Each transaction can choose the suitable granularity by itself. (in the example below: record file, table space, area, database) (You can choose to lock the entire File 1 or Area 2 for example)(If something below is locked, you can’t lock above, that’s where intention locks come in handy)</li>
+<li>The scheduler must then prevent transactions from setting conflicting locks in overlapping granularities.</li>
+</ul>
+<p>If the database is tree-structured, two provisions are helpful : - Distinction between explicit and implicit locks (higher-level locks implicitly lock also lower level objects) - Propagation of locks in tree upwards as <strong>intention locks</strong> (<span class="math inline"><em>i</em><em>r</em><em>l</em></span>, <span class="math inline"><em>i</em><em>w</em><em>l</em></span>, <span class="math inline"><em>r</em><em>i</em><em>w</em><em>l</em></span>)</p>
+<p>Each transaction <span class="math inline"><em>t</em><sub><em>i</em></sub></span> is locked/unlocked as follows: 1. If <span class="math inline"><em>x</em></span> is not the root of the database, <span class="math inline"><em>t</em><sub><em>i</em></sub></span> must own a <span class="math inline"><em>i</em><em>r</em></span>- or <span class="math inline"><em>i</em><em>w</em></span>-lock on the parent node of <span class="math inline"><em>x</em></span>, in order to be able to set <span class="math inline"><em>r</em><em>l</em><sub><em>i</em></sub>(<em>x</em>)</span> or <span class="math inline"><em>i</em><em>r</em><em>l</em><sub><em>i</em></sub>(<em>x</em>)</span>. 2. If <span class="math inline"><em>x</em></span> is not the root of the database, <span class="math inline"><em>t</em><sub><em>i</em></sub></span> must own a <span class="math inline"><em>i</em><em>w</em></span>-lock on the parent node of <span class="math inline"><em>x</em></span>, in order to be able to set <span class="math inline"><em>w</em><em>l</em><sub><em>i</em></sub>(<em>x</em>)</span> or <span class="math inline"><em>i</em><em>w</em><em>l</em><sub><em>i</em></sub>(<em>x</em>)</span>. 3. To read (write) <span class="math inline"><em>x</em></span>, <span class="math inline"><em>t</em><sub><em>i</em></sub></span> must own a <span class="math inline"><em>r</em></span>-lock or <span class="math inline"><em>w</em></span>-lock on <span class="math inline"><em>x</em></span>. 4. <span class="math inline"><em>t</em><sub><em>i</em></sub></span> cannot remove an intentional lock on <span class="math inline"><em>x</em></span>, as long as <span class="math inline"><em>t</em><sub><em>i</em></sub></span> has still a lock on a child of <span class="math inline"><em>x</em></span>.</p>
+<p><strong>Summary</strong>: <em>Locks are set top-down and removed bottom-up</em>.<br />
+We can prove that, for every transaction, which keeps the 2-Phase rules, <span class="math inline"><em>ε</em>(<em>M</em><em>G</em><em>L</em>) ⊆ <em>C</em><em>S</em><em>R</em></span> is valid.</p>
+<h3 id="index-locking">Index Locking</h3>
+<p>Assumption so far: - DB is a fixed collection of independent objects - Even Strict 2PL might not guarantee serializability if objects are added during a transaction.</p>
+<p><strong>Example</strong>: (Phantom Problem, assume page-level locking is used) 1. T1 locks all pages containing person records with sex=male, and finds oldest person (e.g. age=71) 2. T2 inserts a new male person with age=96 1. This record is inserted on a different page than the pages locked by T1 3. T2 deletes oldest female person with age=80 1. This record is also located on a page which is not locked by T1 4. T2 commits 5. T1 now locks all pages containing female person records and finds oldest (e.g. age=75)</p>
+<p><span class="math inline">⇒</span> There is no consistent DB state where T1 is correct!</p>
+<ul>
+<li>T1 implicitly assumes that it has locked the set of all male person records
+<ul>
+<li>This is true only if no records are added while T1 is executed. Thus, some mechanism to enforce this assumption is needed.</li>
+</ul></li>
+<li>The example shows that conflict serializability is guaranteed only if the set of objects is fixed.</li>
+<li>Possible Solutions
+<ul>
+<li>No Index: T1 has to lock all pages and the file/table to prevent new records/pages being added – very inefficient!</li>
+<li>Index on sex field:
+<ul>
+<li>T1 needs to lock the index page with data entries for sex=male</li>
+<li>If there are no such records yet, T1 must lock the index page where such a data entry would be created.</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="b-trees-and-the-simple-locking-algorithm">B+ Trees and the Simple Locking Algorithm</h3>
+<div data-align="center">
+<p><img src="src/b_tree1.png" width= 350></p>
+</div>
+<p>A B+-tree of type <span class="math inline">(<em>k</em>, <em>k</em> * )</span> is a multi-path tree with the following properties: - Every node has one more references than it has keys. - All leaves are at the same distance from the root. - For every non-leaf node <span class="math inline"><em>N</em></span> with <span class="math inline"><em>k</em></span> being the number of keys in <span class="math inline"><em>N</em></span>: all keys in the first child’s subtree are less than <span class="math inline"><em>N</em></span>’s first key; and all keys in the ith child’s subtree <span class="math inline">(2 ≤ <em>i</em> ≤ <em>k</em>)</span> are between the <span class="math inline">(<em>i</em> − 1)</span>th key of n and the <span class="math inline"><em>i</em></span>th key of <span class="math inline"><em>n</em></span>. - The root has at least two children. - Every non-leaf, non-root node has at least <span class="math inline"><em>f</em><em>l</em><em>o</em><em>o</em><em>r</em>(<em>d</em>/2)</span> children. - Each leaf contains at least <span class="math inline"><em>f</em><em>l</em><em>o</em><em>o</em><em>r</em>(<em>d</em>/2)</span> keys. - Every key from the table appears in a leaf, in left-to-right sorted order.</p>
+<p>There are two operations on a B+ tree that make modifies it:</p>
+<p><strong>Insertion</strong> - Descend to the leaf where the key fits. - If the node has an empty space, insert the key into the node. - <em>Redistribute Phase</em>: If the node is already full, split it into two nodes, distributing the keys evenly between the two nodes. - If the node is a leaf: take a copy of the minimum value in the second of these two nodes and repeat this insertion algorithm to insert it into the parent node. - If the node is a non-leaf: exclude the middle value during the split and repeat this insertion algorithm to insert this excluded value into the parent node.</p>
+<p><strong>Deletion</strong> - Remove the required key from the node. - If the node still has enough keys to satisfy the invariant, stop. - <em>Redistribute Step</em>: If the node has too few keys to satisfy the invariants, but its next oldest or next youngest sibling at the same level has more than necessary, distribute the keys between this node and the neighbor. Repair the keys in the level above to represent that these nodes now have a different “split point” between them; this involves simply changing a key in the levels above, without deletion or insertion. - <em>Merge step</em>: If the node has too few keys to satisfy the invariant, and the next oldest or next youngest sibling is at the minimum for the invarant, then merge the node with its sibling; if the node is a non-leaf, we will need to incorporate the “split key” from the parent into our merging. In either case, we will need to repeat the removal algorithm on the parent node to remove the “split key” that previously separated these merged nodes - unless the parent is the root and we are removing the final key from the root, in which case the merged node becomes the new root (and the tree has become one level shorter than before).</p>
+<p><strong>Simple Locking Algorithm</strong><br />
+The Simple Locking Algorithm is an example of index locking. We set/remove locks in the following way:</p>
+<ul>
+<li><p><strong>Search</strong>: We begin at the root and go down. On each level we <span class="math inline"><em>r</em><em>l</em></span> the child and unlock the parent. This until we reach the leaf.</p></li>
+<li><p><strong>Insert/Delete</strong>: We also begin at the root and go down. On each level we <span class="math inline"><em>w</em><em>l</em></span> the child and then check if it is safe. A node is safe if the changes made will not propagate up beyond the node. In insertions, a node is safe if it is not full. In deletions, a node is safe if it not half empty. If the node is safe, then unlock all of its ancestors.</p></li>
+</ul>
+<p>A con of the Simple Locking Algorithm is that the <span class="math inline"><em>w</em><em>l</em></span> that we put on nodes that are not leafs are unnecessary, because only the leaf nodes are modified. The leaf nodes are the only ones that contain data.</p>
+<div data-align="center">
+<p><img src="src/b_tree.png" width= 350></p>
+</div>
+<h2 id="recovery-protocols">Recovery Protocols</h2>
+<p>Read or write operations refer to a page of secondary storage.</p>
+<ul>
+<li><strong>Fetch</strong>: (read operation) transfers a page from the database into the buffer, if the corresponding page is not yet in the buffer.</li>
+<li><strong>Flush</strong>: after a write operation modifies the content of a page, which must be in the buffer; the page can be written to the database (flushed) at once or later.</li>
+</ul>
+<p>Theoretically, all changes on objects <span class="math inline"><em>o</em></span> made by <span class="math inline"><em>t</em></span> (write operations) should be flushed to disk exactly at commit. Unfortunately this would create a number of problems: - <strong>Steal</strong> (The risk of Early Disk Writing): usually the operative system and not the database system decides how the pages are used, so the buffer manager might choose to replace the frame in memory which contains the page with the object <span class="math inline"><em>o</em></span> (i.e. a frame is stolen from <span class="math inline"><em>t</em></span>).<br />
+In this case things are written on the disk before the commit, which could possibly lead to dirty reads. - <strong>Force</strong> (What about Late Disk Writing?): It is not optimal to always write on the disk at commit points (force), because this creates a lot of disk access requests at the same time and affects performance. If we allow changes to be flushed after commit (no force), the performance would increase.</p>
+<div data-align="center">
+<p><img src="src/force.png" width= 250></p>
+</div>
+<p>Data Manager and Transaction Manager</p>
+<div data-align="center">
+<p><img src="src/data_manager.png" width= 600></p>
+</div>
+<p>The types of faults, which a DBMS must be able to handle: 1. <strong>Transaction faults</strong>: a transaction does not reach its commit point, e.g. by an error in program or an involvement in a deadlock. 2. <strong>System crash</strong>: parts of (volatile) main memory or buffers get lost, e.g. by errors in DBMS codes, in operating systems or hardwares. 3. <strong>Media fault</strong>: parts of (non-volatile) secondary storage get lost, e.g. by a head crash on a disk, faults in an operating system routine for the writes onto disks.</p>
+<p>In the following only fault types (1) and (2) will be considered.</p>
+<p>Crash Scenario</p>
+<div data-align="center">
+<p><img src="src/crash_scenario.png" width= 500></p>
+</div>
+<p>Transactions are classified now in two classes: - Transactions, which were <strong>already released</strong> before the fault. These need a <strong>REDO</strong>, if results are not permanently stored (No- Force situation). - Transactions, which were <strong>still active</strong> by the time of the fault. These need an <strong>UNDO</strong>, if some results are already stored on disk (Steal situation).</p>
+<p>The Recovery Manager (RM) maintains a <strong>log</strong> file : - If <span class="math inline"><em>t</em></span> wants to write a new value of <span class="math inline"><em>x</em></span>, a <strong><em>Before-Image</em></strong> of <span class="math inline"><em>x</em></span> is written in the log beforehand (consisting of the ID of <span class="math inline"><em>t</em></span>, the ID of <span class="math inline"><em>x</em></span> and the old value of <span class="math inline"><em>x</em></span>). - The new value of <span class="math inline"><em>x</em></span> is logged in an <strong><em>After-Image</em></strong> (consisting of IDs for <span class="math inline"><em>t</em></span> and <span class="math inline"><em>x</em></span> as well as the new value of <span class="math inline"><em>x</em></span>).<br />
+To execute a REDO or UNDO of <span class="math inline"><em>t</em></span>, the log entries for t are read and processed in reverse sequence. Recovery protocols are classified whether only <em>After-Images</em> or only <em>Before-Images</em> or both (most systems) are stored.</p>
+<p>Any protocol must satisfy the UNDO and REDO rules: - UNDO-rule („Write-Ahead-Log-Protocol“): The Before-Image of a write operation (the old value of x) must be written into the log, before the new value appears in the stable database. - REDO-rule(„Commit-rule“): Before a transaction is terminated, every new value that has been written by it must be in the stable storage (in the stable database or in log).</p>
+<p>Direct consequence: - For No-REDO: ensure that all After-Images of a transaction are written in the database before or during the commit. - For No-UNDO: ensure,that no After-Image of a transaction is written into the database (but only the log) before the commit.</p>
+<h1 id="relational-queries">Relational Queries</h1>
+<p>DB Schema</p>
+<div data-align="center">
+<p><img src="src/run_ex.png" width= 350></p>
+</div>
+<p>Dept(Department): - dno: department number (key) - dname: department name - mgr: managers (foreign key)</p>
+<p>Empl(Employee): - eno: employee number (key) - name: employee name - marstat: marital status - salary - dno: department number (foreign key)</p>
+<p>Office: - floor - room - eno: employee number (foreign key)</p>
+<div data-align="center">
+<p><img src="src/cluster.png" width= 450></p>
+</div>
+</body>
+</html>

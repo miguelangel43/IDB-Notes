@@ -1,0 +1,30 @@
+Exercise 2
+
+Q4
+1. Search key = 76
+rl(A)
+rl(B)
+ru(A)
+rl(F)
+ru(B)
+r(F)
+ru(F)
+
+2. Insert 82
+wl(A)
+wl(C)
+wu(A) because node C is not full and therefore safe in an insertion
+wl(G)
+wu(C) because node G is not full and therefore safe in an insertion
+w(G)
+wu(G)
+
+3. Delete 61
+wl(A)
+wl(B)
+wu(A) because node B is not half-empty and therefore safe in a deletion
+wl(E) lock on node B cannot be yet removed because node E is half-empty and therefore not safe
+delete(61)
+merge(D,E,D)
+wu(E)
+wu(B)

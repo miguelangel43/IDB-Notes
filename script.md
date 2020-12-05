@@ -1,7 +1,3 @@
-# Implementation of Databases Notes
-
-[[TOC]]
-
 # Architecture of Database Systems
 
 ## Goals and Tasks of DBMS
@@ -16,6 +12,8 @@
     - **Storage Structure** is responsible for managing records and indexes. The auxiliary structures are DBTT, FPA, page indexes and so on. The addressing units to the lower layer include page and segments. The interface between Logical Access Structure and Storage Structure is Internal Record Interface, in which records are stored in B* tree.  
     - **Page Assignment** is for managing buffers and segments. The auxiliary structures are page and block tables. The addressing units to the lower layer include blocks and files. The interface between Storage Structure and Page Assignment is System Buffer Interface. 
     - **Memory Assignment Structure** is responsible for managing files and external memories. The auxiliary structures are VTOC, extent tables and system catalogue. The addressing units to Physical Volume are tracks, cylinders, channels and so on. The interface between Page Assignment and Memory Assignment Structure is File Interface. And the interface between Memory Assignment Structure and Physical Volume is Device Interface.  
+
+![](src/five_layers.PNG){ width=550 }
 
 <div align="center">
 <img src="src/five_layers.PNG" width=550>
@@ -110,7 +108,7 @@ $s' = r_1(x) w_1(y) r_2(y) w_2(y) c_2 c_1$
 
 In $s:  y=f_{2y}(y_0)$  
 In $s': y=f_{2y}(f_{1y}(x_0))$  
-$\Longrightarrow s$ $\not$$\approx_f s' \Longrightarrow s \notin FSR$
+$\Longrightarrow s$ $\approx_f s' \Longrightarrow s \notin FSR$
 <!-- pandoc doesn't properly read \not -->
 
 ## Conflict Serializability Classes
@@ -227,6 +225,7 @@ The scheduler can apply locks for the synchronization of accesses on data object
 
 **Rules for the application of locks**  
 For each $t_i$, which is contained completely in a schedule $s$, the following should be valid:
+
 1. If $t_i$ contains a $r_i(x)[w_i(x)]$, thus $rl_i(x)[wl_i(x)]$ stands anywhere before it in $s$ and $ru_i(x)[wu_i(x)]$ stands anywhere after it.
 2. For each $x$ processed by $t_i$ there are exactly one $rl_i(x)$ resp. $wl_i(x)$ in $s$
 3. No $ru_i/wu_i$ is redundant
@@ -242,7 +241,7 @@ A scheduler **works according to a locking protocol**, if for every output $s$ a
 ### Two Phase Locking (2PL)
 
 A locking protocol is **two phase**, if for every generated schedule $s$ and every transaction $t_i \in trans(s)$ it holds:  
-After the first $ou_i$ action there is no further $ql_i$ action $(o,q \in {r,w})$. Such a scheduler is called a **2PL scheduler**.  
+After the first $ou_i$ action there is no further $ql_i$ action $(o,q \in \{r,w\})$. Such a scheduler is called a **2PL scheduler**.  
 "In the first phase of a transaction locks will only be set, in the second phase locks will only be removed."
 
 **Examples**:  
@@ -291,6 +290,7 @@ Assumption so far:
 - Even Strict 2PL might not guarantee serializability if objects are added during a transaction.
   
 **Example**: (Phantom Problem, assume page-level locking is used)
+
 1. T1 locks all pages containing person records with sex=male, and finds oldest
 person (e.g. age=71)
 2. T2 inserts a new male person with age=96
@@ -311,7 +311,41 @@ $\Longrightarrow$ There is no consistent DB state where T1 is correct!
         - T1 needs to lock the index page with data entries for sex=male
         -  If there are no such records yet, T1 must lock the index page where such a data entry would be created.
 
-**Example: B+ Trees Simple Locking Algorithm**  
+### B+ Trees and the Simple Locking Algorithm
+
+<div align="center">
+<img src="src/b_tree1.png" width= 350>
+</div>
+
+A B+-tree of type $(k, k*)$ is a multi-path tree with the following properties:
+
+- Every node has one more references than it has keys.
+- All leaves are at the same distance from the root.
+- For every non-leaf node $N$ with $k$ being the number of keys in $N$: all keys in the first child's subtree are less than $N$'s first key; and all keys in the ith child's subtree $(2 ≤ i ≤ k)$ are between the $(i − 1)$th key of n and the $i$th key of $n$.
+- The root has at least two children.
+- Every non-leaf, non-root node has at least $floor(d / 2)$ children.
+- Each leaf contains at least $floor(d / 2)$ keys.
+- Every key from the table appears in a leaf, in left-to-right sorted order.
+
+There are two operations on a B+ tree that make modifies it:
+  
+**Insertion**
+
+- Descend to the leaf where the key fits.
+- If the node has an empty space, insert the key into the node.
+- _Redistribute Phase_: If the node is already full, split it into two nodes, distributing the keys evenly between the two nodes.
+  - If the node is a leaf: take a copy of the minimum value in the second of these two nodes and repeat this insertion algorithm to insert it into the parent node.
+  - If the node is a non-leaf: exclude the middle value during the split and repeat this insertion algorithm to insert this excluded value into the parent node.
+
+**Deletion**
+
+- Remove the required key from the node.
+- If the node still has enough keys to satisfy the invariant, stop.
+- _Redistribute Step_: If the node has too few keys to satisfy the invariants, but its next oldest or next youngest sibling at the same level has more than necessary, distribute the keys between this node and the neighbor. Repair the keys in the level above to represent that these nodes now have a different "split point" between them; this involves simply changing a key in the levels above, without deletion or insertion.
+- _Merge step_: If the node has too few keys to satisfy the invariant, and the next oldest or next youngest sibling is at the minimum for the invarant, then merge the node with its sibling; if the node is a non-leaf, we will need to incorporate the "split key" from the parent into our merging. In either case, we will need to repeat the removal algorithm on the parent node to remove the "split key" that previously separated these merged nodes - unless the parent is the root and we are removing the final key from the root, in which case the merged node becomes the new root (and the tree has become one level shorter than before).
+
+**Simple Locking Algorithm**  
+The Simple Locking Algorithm is an example of index locking. We set/remove locks in the following way:
 
 - **Search**: We begin at the root and go down. On each level we $rl$ the child and unlock the parent. This until we reach the leaf.
 
@@ -326,6 +360,66 @@ A con of the Simple Locking Algorithm is that the $wl$ that we put on nodes that
 
 ## Recovery Protocols
 
+Read or write operations refer to a page of secondary storage.
+
+- **Fetch**: (read operation) transfers a page from the database into the buffer, if the corresponding page is not yet in the buffer.
+- **Flush**: after a write operation modifies the content of a page, which must be in the buffer; the page can be written to the database (flushed) at once or later.
+
+Theoretically, all changes on objects $o$ made by $t$ (write operations) should be flushed to disk exactly at commit. Unfortunately this would create a number of problems:
+
+- **Steal** (The risk of Early Disk Writing): usually the operative system and not the database system decides how the pages are used, so the buffer manager might choose to replace the frame in memory which contains the page with the object $o$ (i.e. a frame is stolen from $t$).   
+In this case things are written on the disk before the commit, which could possibly lead to dirty reads.
+- **Force** (What about Late Disk Writing?): It is not optimal to always write on the disk at commit points (force), because this creates a lot of disk access requests at the same time and affects performance. If we allow changes to be flushed after commit (no force), the performance would increase.
+
+<div align="center">
+<img src="src/force.png" width= 250>
+</div>
+
+Data Manager and Transaction Manager
+
+<div align="center">
+<img src="src/data_manager.png" width= 600>
+</div>
+
+The types of faults, which a DBMS must be able to handle:
+
+1. **Transaction faults**: a transaction does not reach its commit point, e.g. by an error in program or an involvement in a deadlock.
+2. **System crash**: parts of (volatile) main memory or buffers get lost, e.g. by errors in DBMS codes, in operating systems or hardwares.
+3. **Media fault**: parts of (non-volatile) secondary storage get lost, e.g. by a head crash on a disk, faults in an operating system routine for the writes onto disks.
+
+In the following only fault types (1) and (2) will be considered.
+
+Crash Scenario
+
+<div align="center">
+<img src="src/crash_scenario.png" width= 500>
+</div>
+
+Transactions are classified now in two classes:
+
+- Transactions, which were **already released** before the fault. These need a **REDO**, if results are not permanently stored (No- Force situation).
+- Transactions, which were **still active** by the time of the fault. These need an **UNDO**, if some results are already stored on disk (Steal situation).
+
+The Recovery Manager (RM) maintains a **log** file :
+
+- If $t$ wants to write a new value of $x$, a ***Before-Image*** of $x$ is written in the log beforehand (consisting of the ID of $t$, the ID of $x$ and the old value of $x$).
+- The new value of $x$ is logged in an ***After-Image*** (consisting of IDs for $t$ and $x$ as well as the new value of $x$).   
+To execute a REDO or UNDO of $t$, the log entries for t are read and processed in reverse sequence.
+Recovery protocols are classified whether only *After-Images* or only *Before-Images* or both (most systems) are stored.
+
+Any protocol must satisfy the UNDO and REDO rules:
+
+- UNDO-rule („Write-Ahead-Log-Protocol“):
+The Before-Image of a write operation (the old value of x) must be written into the log, before the new value appears in the stable database.
+- REDO-rule(„Commit-rule“):
+Before a transaction is terminated, every new value that has been written by it must be in the stable storage (in the stable database or in log).
+
+Direct consequence:
+
+- For No-REDO: ensure that all After-Images of a transaction are written in the database before or during the commit.
+- For No-UNDO: ensure,that no After-Image of a transaction is written into the database (but only the log) before the commit.
+
+
 # Relational Queries
 
 DB Schema
@@ -335,11 +429,13 @@ DB Schema
 </div>
 
 Dept(Department):
+
 - dno: department number (key)
 - dname: department name
 - mgr: managers (foreign key)
 
 Empl(Employee):
+
 - eno: employee number (key)
 - name: employee name
 - marstat: marital status
@@ -347,6 +443,7 @@ Empl(Employee):
 - dno: department number (foreign key)
 
 Office:
+
 - floor
 - room
 - eno: employee number (foreign key)
