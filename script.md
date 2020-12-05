@@ -14,11 +14,7 @@
     - **Memory Assignment Structure** is responsible for managing files and external memories. The auxiliary structures are VTOC, extent tables and system catalogue. The addressing units to Physical Volume are tracks, cylinders, channels and so on. The interface between Page Assignment and Memory Assignment Structure is File Interface. And the interface between Memory Assignment Structure and Physical Volume is Device Interface.  
 
 ![](src/five_layers.PNG){ width=550 }
-
-<div align="center">
-<img src="src/five_layers.PNG" width=550>
-<img src="src/five_layers_example.PNG" width=550>
-</div>
+![](src/five_layers_example.PNG){ width=550 }
 
 
 # Advanced Transaction Management
@@ -59,24 +55,20 @@ with $n< \infty$, $p_i \in \{r(x),w(x)\}$ for $1\leq i\leq n$ and $x\in D$. Indi
 ## Synchronization Problems
 
 - Lost update 
-<div align="center">
-<img src="src/lost_update.PNG" width=550>
-</div>
+
+![](src/lost_update.PNG){ width=550 }
 
 - Dirty read
-<div align="center">
-<img src="src/dirty_read.PNG" width=550>
-</div>
+
+![](src/dirty_read.PNG){ width=550 }
 
 - Non-repeatable read/Inconsistent read
-<div align="center">
-<img src="src/non_repeat.PNG" width=550>
-</div>
+
+![](src/non_repeat.PNG){ width=550 }
 
 - Phantom Problem
-<div align="center">
-<img src="src/phantom_problem.PNG" width=550>
-</div>
+
+![](src/phantom_problem.PNG){ width=550 }
 
 ### ACID Principle
 Every transaction must be processed in the way that the ACID properties are preserved.
@@ -130,9 +122,7 @@ $conf(s)$ denotes the conflict relations of a schedule s, which are cleaned up b
 
 Three Serializability classes will be presented: $CSR$, $OCSR$ and $CO$.
 
-<div align="center">
-<img src="src/sum_csr.png" width=440>
-</div>
+![](src/sum_csr.PNG){ width=440 }
 
 ### $CSR$
 
@@ -144,9 +134,7 @@ Three Serializability classes will be presented: $CSR$, $OCSR$ and $CO$.
 
 - The **conflict graph**
 
-<div align="center">
-<img src="src/graph.png" width=350>
-</div>
+![](src/graph.PNG){ width=350 }
 
 **Theorem 2.2**:  
  $s \in CSR \Leftrightarrow G(s)$ is acyclic.   
@@ -167,9 +155,7 @@ then : $c_i$ is before $c_j$ in $s$.
 
 ## Recovery Theory
 
-<div align="center">
-<img src="src/sum_strict.png" width= 350>
-</div>
+![](src/sum_strict.PNG){ width=350 }
 
 ### $RC$
 A schedule s is called **recoverable**, if the following holds:  
@@ -263,9 +249,7 @@ $\varepsilon (S2PL) \subseteq CSR \cap ST$
 
 ### Multi-Granularity Locking (MGL)
 
-<div align="center">
-<img src="src/mgl_tree.png" width=400>
-</div>
+![](src/mgl_tree.png){ width=400 }
 
 - Each transaction can choose the suitable granularity by itself. (in the example below: record file, table space, area, database) (You can choose to lock the entire File 1 or Area 2 for example)(If something below is locked, you can't lock above, that's where intention locks come in handy)
 - The scheduler must then prevent transactions from setting conflicting locks in overlapping granularities.  
@@ -313,9 +297,7 @@ $\Longrightarrow$ There is no consistent DB state where T1 is correct!
 
 ### B+ Trees and the Simple Locking Algorithm
 
-<div align="center">
-<img src="src/b_tree1.png" width= 350>
-</div>
+![](src/b_tree1.png){ width=350 }
 
 A B+-tree of type $(k, k*)$ is a multi-path tree with the following properties:
 
@@ -353,10 +335,7 @@ The Simple Locking Algorithm is an example of index locking. We set/remove locks
 
 A con of the Simple Locking Algorithm is that the $wl$ that we put on nodes that are not leafs are unnecessary, because only the leaf nodes are modified. The leaf nodes are the only ones that contain data.
 
-<div align="center">
-<img src="src/b_tree.png" width= 350>
-</div>
-
+![](src/b_tree.png){ width=350 }
 
 ## Recovery Protocols
 
@@ -371,15 +350,11 @@ Theoretically, all changes on objects $o$ made by $t$ (write operations) should 
 In this case things are written on the disk before the commit, which could possibly lead to dirty reads.
 - **Force** (What about Late Disk Writing?): It is not optimal to always write on the disk at commit points (force), because this creates a lot of disk access requests at the same time and affects performance. If we allow changes to be flushed after commit (no force), the performance would increase.
 
-<div align="center">
-<img src="src/force.png" width= 250>
-</div>
+![](src/force.png){ width=250 }
 
 Data Manager and Transaction Manager
 
-<div align="center">
-<img src="src/data_manager.png" width= 600>
-</div>
+![](src/data_manager.png){ width=600 }
 
 The types of faults, which a DBMS must be able to handle:
 
@@ -391,9 +366,7 @@ In the following only fault types (1) and (2) will be considered.
 
 Crash Scenario
 
-<div align="center">
-<img src="src/crash_scenario.png" width= 500>
-</div>
+![](src/crash_scenario.png){ width=500 }
 
 Transactions are classified now in two classes:
 
@@ -424,9 +397,7 @@ Direct consequence:
 
 DB Schema
 
-<div align="center">
-<img src="src/run_ex.png" width= 350>
-</div>
+![](src/run_ex.png){ width=350 }
 
 Dept(Department):
 
@@ -448,7 +419,4 @@ Office:
 - room
 - eno: employee number (foreign key)
 
-
-<div align="center">
-<img src="src/cluster.png" width= 450>
-</div>
+![](src/cluster.png){ width=450 }
