@@ -525,4 +525,34 @@ $M log M + N log N$ is the sort cost for the two tables
 
 ### Hash Join
 
-## 3.3 Cost-Based Query Optimization
+**Cost**: In partitioning phase, read+write both relations; $2(M+N)$. In matching phase, read both relations; $M+N$ I/Os.
+In total $3(M+N)$.
+
+If tuple $t \in$ TASK and a tuple $e \in$ EMPL satisfy the join condition, then they have the same value for the join attributes. If that value is hashed to some partition $i$, the TASK tuple must be in $t_i$ and the EMPL tuple in $e_i$.
+
+**Phase #1: Build**
+
+- Scan the outer relation and populate a hash table using the hash function $h_1$ on the join attributes.
+
+**Phase #2: Probe**
+
+- Scan the inner relation and use $h_1$ on each tuple to jump to a location in the hash table and find a matching tuple.
+
+```
+build hash table HT_R for R
+foreach tuple s in S
+  output, if h_1(s) in HT_R
+```
+
+**Join Algorithms: Summary**
+
+| Algorithm               | IO Cost               |  Example     |
+|-------------------------|-----------------------|--------------|
+| Simple Nested Loop Join | $M + (m \cdot N)$     | 1.3 hours    |
+| Block nested Loop Join  | $M + (m \cdot N)$     | 50 seconds   |
+| Index Nested Loop Join  | $M + (M \cdot C)$     | Variable     |
+| Sort-Merge Join         | $M + N + (sort cost)$ | 0.59 seconds |
+| Hash Join               | $3(M + N)$            | 0.45 seconds |
+
+Hashing is almost always better than sorting for operator execution.
+
