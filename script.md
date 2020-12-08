@@ -1,6 +1,6 @@
-# Architecture of Database Systems
+# 1. Architecture of Database Systems
 
-## Goals and Tasks of DBMS
+## 1.1 Goals and Tasks of DBMS
 
 - **Data independence** is the main goal of DBMS. It means that data is managed independent of applications. It refers to the immunity of user applications to changes made in the definition and organisation of data. It makes data available for different applications. There are two types of data independences. 
     - **Physical data independence**: logical schema is independent of physical structure, i.e., relational schema is independent of changes on indexes, clustering, etc.
@@ -13,13 +13,15 @@
     - **Page Assignment** is for managing buffers and segments. The auxiliary structures are page and block tables. The addressing units to the lower layer include blocks and files. The interface between Storage Structure and Page Assignment is System Buffer Interface. 
     - **Memory Assignment Structure** is responsible for managing files and external memories. The auxiliary structures are VTOC, extent tables and system catalogue. The addressing units to Physical Volume are tracks, cylinders, channels and so on. The interface between Page Assignment and Memory Assignment Structure is File Interface. And the interface between Memory Assignment Structure and Physical Volume is Device Interface.  
 
-![](src/five_layers.PNG){ width=550 }
-![](src/five_layers_example.PNG){ width=550 }
+![](src/five_layers.PNG){ width=350 }
 
 
-# Advanced Transaction Management
+![](src/five_layers_example.PNG){ width=340 }
 
-## Definitions
+
+# 2. Advanced Transaction Management
+
+## 2.1 Definitions
 
 1. A **transaction(TX)** is a DB program, which only consists of read and write operations to a database. These operations are denoted as read(x)or write(x), where xis a DB object.
 
@@ -52,23 +54,23 @@ with $n< \infty$, $p_i \in \{r(x),w(x)\}$ for $1\leq i\leq n$ and $x\in D$. Indi
 
    - op(s) = set of all the actions occurring in s
 
-## Synchronization Problems
+## 2.2 Synchronization Problems
 
 - Lost update 
 
-![](src/lost_update.PNG){ width=550 }
+![](src/lost_update.PNG){ width=260 }
 
 - Dirty read
 
-![](src/dirty_read.PNG){ width=550 }
+![](src/dirty_read.PNG){ width=290 }
 
 - Non-repeatable read/Inconsistent read
 
-![](src/non_repeat.PNG){ width=550 }
+![](src/non_repeat.PNG){ width=290 }
 
 - Phantom Problem
 
-![](src/phantom_problem.PNG){ width=550 }
+![](src/phantom_problem.PNG){ width=290 }
 
 ### ACID Principle
 Every transaction must be processed in the way that the ACID properties are preserved.
@@ -78,7 +80,7 @@ Every transaction must be processed in the way that the ACID properties are pres
 - **Isolation**: Isolated execution of a transaction, i.e. „as if executed solely“
 - **Durability**: Once a transaction has been successfully completed, its effects should persist even if the system crashes before all its changes
 
-## Serializability Theory
+## 2.3 Serializability Theory
 ### Definitions
 
 Let $s$ and $s'$ be schedules. $s$ and $s'$ are called **final-state equivalent,** denoted as $s \approx_f s'$, if $op(s) = op(s')$ and all DB objects have at the end identical values in $s$ and $s'$, according to the abstract semantics.
@@ -103,7 +105,7 @@ In $s': y=f_{2y}(f_{1y}(x_0))$
 $\Longrightarrow s$ $\approx_f s' \Longrightarrow s \notin FSR$
 <!-- pandoc doesn't properly read \not -->
 
-## Conflict Serializability Classes
+## 2.4 Conflict Serializability Classes
 
 Let $s$ be a schedule, $t, t' \in$ trans(s) and $t \neq t'$:
 
@@ -122,7 +124,7 @@ $conf(s)$ denotes the conflict relations of a schedule s, which are cleaned up b
 
 Three Serializability classes will be presented: $CSR$, $OCSR$ and $CO$.
 
-![](src/sum_csr.PNG){ width=440 }
+![](src/sum_csr.PNG){ width=340 }
 
 ### $CSR$
 
@@ -134,7 +136,7 @@ Three Serializability classes will be presented: $CSR$, $OCSR$ and $CO$.
 
 - The **conflict graph**
 
-![](src/graph.PNG){ width=350 }
+![](src/graph.PNG){ width=300 }
 
 **Theorem 2.2**:  
  $s \in CSR \Leftrightarrow G(s)$ is acyclic.   
@@ -153,9 +155,9 @@ if the following holds:
 For all $t_i, t_j \in commit(s), i \neq j$, with $(p,q) \in conf(s)$ for $p \in t_i, q \in t_j$,   
 then : $c_i$ is before $c_j$ in $s$.
 
-## Recovery Theory
+## 2.5 Recovery Theory
 
-![](src/sum_strict.PNG){ width=350 }
+![](src/sum_strict.PNG){ width=300 }
 
 ### $RC$
 A schedule s is called **recoverable**, if the following holds:  
@@ -199,7 +201,7 @@ $(\forall t_i ,t_j \in trans(s)) r_j(x) <_s w_i(x), i \neq j \Rightarrow a_j <_s
 - A schedule from RG avoids additionally Read-Write conflicts between those kinds of transactions.
 
 
-## Scheduling Algorithms
+## 2.6 Scheduling Algorithms
 
 Techniques with which a DBMS can generate correct schedules for transactions to be processed; these are called scheduling protocols, or in short **scheduler**. A scheduler gets as input a sequence of operations (r,w,a,c) and it must produce a correct output schedule from them.
 
@@ -297,7 +299,7 @@ $\Longrightarrow$ There is no consistent DB state where T1 is correct!
 
 ### B+ Trees and the Simple Locking Algorithm
 
-![](src/b_tree1.png){ width=350 }
+![](src/b_tree1.png){ width=300 }
 
 A B+-tree of type $(k, k*)$ is a multi-path tree with the following properties:
 
@@ -337,7 +339,7 @@ A con of the Simple Locking Algorithm is that the $wl$ that we put on nodes that
 
 ![](src/b_tree.png){ width=350 }
 
-## Recovery Protocols
+## 2.7 Recovery Protocols
 
 Read or write operations refer to a page of secondary storage.
 
@@ -350,7 +352,7 @@ Theoretically, all changes on objects $o$ made by $t$ (write operations) should 
 In this case things are written on the disk before the commit, which could possibly lead to dirty reads.
 - **Force** (What about Late Disk Writing?): It is not optimal to always write on the disk at commit points (force), because this creates a lot of disk access requests at the same time and affects performance. If we allow changes to be flushed after commit (no force), the performance would increase.
 
-![](src/force.png){ width=250 }
+![](src/force.png){ width=200 }
 
 Data Manager and Transaction Manager
 
@@ -366,7 +368,7 @@ In the following only fault types (1) and (2) will be considered.
 
 Crash Scenario
 
-![](src/crash_scenario.png){ width=500 }
+![](src/crash_scenario.png){ width=400 }
 
 Transactions are classified now in two classes:
 
@@ -392,31 +394,135 @@ Direct consequence:
 - For No-REDO: ensure that all After-Images of a transaction are written in the database before or during the commit.
 - For No-UNDO: ensure,that no After-Image of a transaction is written into the database (but only the log) before the commit.
 
+### ARIES
 
-# Relational Queries
+Three main principles must be followed:
+
+1. **Write-Ahead-Logging** (to ensure Atomicity and Durability)Must force the log record for an update before the corresponding data page gets to disk. Must write all log records for a transaction before commit
+2. **Repeat History During Redo**: repeat ALL actions of the DBMS before a crash, restoring the exact state at the time of the crash.
+3. **Log Changes During Undo**: changes made to the database while undoing a transaction are logged to ensure such an action is not repeated in the event of repeated failures/restarts. This information is written into the log in Compensation Log Records (CLRs).
+
+Fields of a log record: (so that we don't have to copy the whole page into the log)
+
+- LSN (Log Sequence Number, ID for a Log record)
+- TransactionID
+- Type (Update, Commit, Abort, End (for End of Commit/Abort), CLR)
+- pageID
+- Offset (indicates where exactly on the page the change happens)
+- Length (how many bytes were changed)
+- old data
+- new data
+
+1.	Describe briefly the 3 phases of ARIES recovery method.  
+The three phases are analysis, redo and undo. 
+The analysis phase identifies the dirty pages in the buffer and active transactions at the time of the crash.
+The Redo phase repeats all actions from the log, starting from the first action which made a page dirty. The redo operation will then be done by restoring the database state to what it was at the time of crash.
+The undo phase undoes transactions that did not commit, so that the database reflects only committed transactions. 
+
+2.	What are log sequence numbers (LSNs) in ARIES? How are they used? What information does the Dirty Page Table and the Transaction Table contain?  
+Log sequence number (LSN) uniquely identifies the log record for latest update the page. It is assigned in ascending order and is sequentially increasing. The log record referred determines what updates have already been applied to the page. Various components in a database system will keep track of LSNs that are related to them. For example, the pageLSN for each page refers to the LSN of the most recent log record with an update for that page. The flushedLSN of system refers to the maximum LSN flushed so far. 
+Dirty Page Table (DPT) keeps track of the pages in the buffer pool which contain changes from uncommitted transactions. Each entry in the table has a recoveryLSN. There is only one entry per dirty page, and it determines the earliest log record that made that page dirty.
+Transaction Table keeps track of all active transactions. Each entry in the table has a lastLSN. It determines the last log entry for that transaction. 
+
+## 2.8 Distributed Transactions and the CAP Theorem
+//TODO
+
+
+# 3. Relational Queries
+
+![](src/ev_chain.png){ width=280 }
+
+In this chapter the **query evaluation chain** is introduced and it is discussed how clustering and/or indexing can influence the algorithms. First we present the running example that will be used throughout this chapter.
 
 DB Schema
 
-![](src/run_ex.png){ width=350 }
+![](src/run_ex.png){ width=550 }
 
-Dept(Department):
+- Sizes:
+  - **M** pages in table TASK (1000), $p_T$ tuples per page in table TASK (100). Each tuple is 40 bytes. **m** is the total number of tuples, $m = p_T \cdot M$
+  - **N** pages in table TASK (500), $p_E$ tuples per page in table EMPL (90). Each tuple is 50 bytes. **n** is the total number of tuples, $n = p_E \cdot N$
+- Costs:
+  - **I/O**: costs for fetching 1 page. Cost Metric: # of IOs to compute operation (e.g. Join)
+  - **O-Notation** for complexity of operations
+  - No other costs are considered (e.g. for processing of data or data output)
 
-- dno: department number (key)
-- dname: department name
-- mgr: managers (foreign key)
+## 3.1 Implementing Single-Relational Operators
 
-Empl(Employee):
+## 3.2 Implementing/Avoiding Join Operations
 
-- eno: employee number (key)
-- name: employee name
-- marstat: marital status
-- salary
-- dno: department number (foreign key)
+### Simple Nested Loop
 
-Office:
+Cost: $M + (m \cdot N) = M + p_T \cdot M \cdot N = 1000 + 100 \cdot 1000 \cdot 500 = 50.001.000$ I/Os  
+For every tuple in TASK, it scans EMPL once
 
-- floor
-- room
-- eno: employee number (foreign key)
+```
+ANSWER:=[];
+FOR EACH t in TASK DO
+  FOR EACH e IN EMPL DO
+    IF e.salary<40,000 AND e.marstat='single' AND
+      t.tname=‘design' AND t.eno=e.eno 
+    THEN ANSWER:+[<e.name>]; 
+```
 
-![](src/cluster.png){ width=450 }
+### Block Nested Loop Join
+
+**Cost**: $M + (\lceil M / (B-2) \rceil \cdot N)$  
+
+Provided we have **B** buffers available.
+- Use **B-2** buffers for scanning the outer table.
+- Use one buffer for the inner table, one buffer for storing output.
+
+```
+ANSWER:=[];
+FOR EACH B - 2 block B_T in TASK DO
+  FOR EACH block B_E in EMPL DO
+    FOR EACH tuple t in TASK DO
+      FOR EACH tuple e IN EMPL DO
+        IF e.salary<40,000 AND e.marstat='single' AND
+          t.tname=‘design' AND t.eno=e.eno 
+        THEN ANSWER:+[<e.name>]; 
+```
+
+If the outer relation completely fits in memory ($B > M+2$), then the costs are really low:   
+$M + (\lceil M / M \rceil \cdot N) = M+N$ 
+
+### Index Nested Loop Join
+
+**Cost**: $M + (m \cdot C)$  
+$C$: cost of each index probe, depends on the index type (e.g. B+trees, hashing).
+
+```
+ANSWER:=[];
+FOR EACH t IN TASK DO
+  Lookup t.eno in index on Empl.eno, get tuple e from EMPL 
+    IF found THEN ANSWER:+[<t,e>];
+```
+
+General tips for nested loop joins:
+
+- Pick the smaller table as the outer table.
+- Buffer as much of the outer table in memory as possible.
+- Loop over the inner table or use an index
+
+### Sort-Merge Join
+
+**Cost**: $M log M + N log N + (M + N)$  
+$(M+ N)$ is the merge cost    
+$M log M + N log N$ is the sort cost for the two tables
+
+**Phase #1: Sort**
+
+- Sort both tables on the join key(s)
+
+**Phase #2: Merge**
+
+- Scan the two sorted tables with cursors.
+  - Advance cursor of T until  
+  current T-tuple >= current E tuple
+  - Advance scan of E until  
+  current E-tuple >= current T tuple
+  - Do this until current T tuple = current E tuple. In that case output matching tuples $<t, e>$ and resume scanning.
+
+### Hash Join
+
+## 3.3 Cost-Based Query Optimization
