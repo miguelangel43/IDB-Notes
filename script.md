@@ -448,7 +448,7 @@ DB Schema
 
 ## 3.1 Implementing Single-Relational Operators
 
-## 3.2 Implementing/Avoiding Join Operations
+## 3.2 Join Algorithms
 
 ### Simple Nested Loop
 
@@ -551,8 +551,75 @@ foreach tuple s in S
 | Simple Nested Loop Join | $M + (m \cdot N)$     | 1.3 hours    |
 | Block nested Loop Join  | $M + (m \cdot N)$     | 50 seconds   |
 | Index Nested Loop Join  | $M + (M \cdot C)$     | Variable     |
-| Sort-Merge Join         | $M + N + (sort cost)$ | 0.59 seconds |
+| Sort-Merge Join         | $M + N + (\text{sort cost})$ | 0.59 seconds |
 | Hash Join               | $3(M + N)$            | 0.45 seconds |
 
 Hashing is almost always better than sorting for operator execution.
 
+## 3.3 Tableaus
+
+A tableau is a representation for a special class of conjunctive queries in domain relational calculus (DRC):
+
+$$\{a_1...a_m| \exists b_1...b_n (P_1 \land P_2 \land ... \land P_k)\}$$
+
+where $P_i$ are atomic predicates (relation predicates or comparisons).
+
+### Tableau Method: Example
+
+```
+SELECT  c.name FROM EMPL c, DEPT d, EMPL t
+
+WHERE   d.dname='computer' AND c.dno=d.dno AND 
+        c.marstat='single' AND t.marstat='single' AND 
+        t.salary<40.000 AND c.eno=t.eno
+
+OR      d.dname='computer' AND c.dno=d.dno AND 
+        c.marstat='single' AND t.marstat='married' AND 
+        t.salary<80.000 AND c.eno=t.eno
+```
+**Equivalent query in Domain Relational Calculus (DRC)**
+
+![](src/drc.png){ width=450 }
+
+For each relation predicate the tableau contains a row, and for each variable a column. 
+
+![](src/tab1.png){ width=450 }
+
+We can replace b5 by a2, b2 by "<40.000" and b6 by b3. We see that the both EMPL rows are the same and we can drop one of them.
+
+![](src/tab2.png){ width=450 }
+
+The rows are contradictory in the marital status. We can drop the whole tableau as the join would be the empty set.
+
+**Result tableau**
+
+![](src/tab3.png){ width=450 }
+
+```
+SELECT  c.name FROM EMPL c, DEPT d
+
+WHERE   d.dname='computer' AND c.dno=d.dno AND
+        c.marstat='single' AND
+        c.salary < 40.000
+```
+
+### Tableau Containment and Equivalence
+
+_Definition 3.1_
+Tableau $T_1$ is **contained** in tableau $T_2$ ($T_1 \subseteq T_2$) if
+
+1. $T_1$, $T_2$ have the same columns and entries in result rows and
+2. the relation computed from $T_1$ is a subset of the one from $T_2$ for all valid assignments of relations to rows and for all valid database instances.
+
+_Theorem 3.1_ (Homomorphism Theorem [Abiteboul et al., 1995])  
+$T1 \subseteq T2 \Longleftrightarrow$
+There is a mapping h from the T2 symbols to the T1 symbols with:
+1. h(resulting_row($T_2$))= resulting_row($T_1$)
+2. h(row($T_2$))= any row of $T_1$ with the same relation name
+3. h(constant) = constant
+4. Integrity constraints in $T_2$ are transferred to the respective symbols in $T_1$ and are also guarenteed in $T_1$.
+
+_Theorem 3.2_  
+Two tableaux $T_x$ and $T_y$ are equivalent, denoted as $(T_x \equiv T_y)$ $\Longleftrightarrow T_x \subseteq T_y \land T_y \subseteq T_x$
+
+### Tableau Minimization
