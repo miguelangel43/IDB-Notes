@@ -1,3 +1,5 @@
+[[TOC]]
+
 # 1. Architecture of Database Systems
 
 ## 1.1 Goals and Tasks of DBMS
@@ -13,11 +15,14 @@
     - **Page Assignment** is for managing buffers and segments. The auxiliary structures are page and block tables. The addressing units to the lower layer include blocks and files. The interface between Storage Structure and Page Assignment is System Buffer Interface. 
     - **Memory Assignment Structure** is responsible for managing files and external memories. The auxiliary structures are VTOC, extent tables and system catalogue. The addressing units to Physical Volume are tracks, cylinders, channels and so on. The interface between Page Assignment and Memory Assignment Structure is File Interface. And the interface between Memory Assignment Structure and Physical Volume is Device Interface.  
 
+## 1.2 Basic Architecture of DBMS
+
 ![](src/five_layers.PNG){ width=350 }
 
 
 ![](src/five_layers_example.PNG){ width=340 }
 
+## 1.3 Distributed Database Systems
 
 # 2. Advanced Transaction Management
 
@@ -396,6 +401,10 @@ Direct consequence:
 
 ### ARIES
 
+//TODO (CMU lecture 21)
+
+Algorithms for Recovery and Isolation Exploiting Semantics. Developed at IBM research in early 1990s.
+
 Three main principles must be followed:
 
 1. **Write-Ahead-Logging** (to ensure Atomicity and Durability)Must force the log record for an update before the corresponding data page gets to disk. Must write all log records for a transaction before commit
@@ -413,16 +422,6 @@ Fields of a log record: (so that we don't have to copy the whole page into the l
 - old data
 - new data
 
-1.	Describe briefly the 3 phases of ARIES recovery method.  
-The three phases are analysis, redo and undo. 
-The analysis phase identifies the dirty pages in the buffer and active transactions at the time of the crash.
-The Redo phase repeats all actions from the log, starting from the first action which made a page dirty. The redo operation will then be done by restoring the database state to what it was at the time of crash.
-The undo phase undoes transactions that did not commit, so that the database reflects only committed transactions. 
-
-2.	What are log sequence numbers (LSNs) in ARIES? How are they used? What information does the Dirty Page Table and the Transaction Table contain?  
-Log sequence number (LSN) uniquely identifies the log record for latest update the page. It is assigned in ascending order and is sequentially increasing. The log record referred determines what updates have already been applied to the page. Various components in a database system will keep track of LSNs that are related to them. For example, the pageLSN for each page refers to the LSN of the most recent log record with an update for that page. The flushedLSN of system refers to the maximum LSN flushed so far. 
-Dirty Page Table (DPT) keeps track of the pages in the buffer pool which contain changes from uncommitted transactions. Each entry in the table has a recoveryLSN. There is only one entry per dirty page, and it determines the earliest log record that made that page dirty.
-Transaction Table keeps track of all active transactions. Each entry in the table has a lastLSN. It determines the last log entry for that transaction. 
 
 ## 2.8 Distributed Transactions and the CAP Theorem
 //TODO
@@ -430,13 +429,19 @@ Transaction Table keeps track of all active transactions. Each entry in the tabl
 
 # 3. Relational Queries
 
+
+
 ![](src/ev_chain.png){ width=280 }
 
 In this chapter the **query evaluation chain** is introduced and it is discussed how clustering and/or indexing can influence the algorithms. First we present the running example that will be used throughout this chapter.
 
+
+
 DB Schema
 
 ![](src/run_ex.png){ width=550 }
+
+![](src/costs.png){ width=400 }
 
 - Sizes:
   - **M** pages in table TASK (1000), $p_T$ tuples per page in table TASK (100). Each tuple is 40 bytes. **m** is the total number of tuples, $m = p_T \cdot M$
@@ -448,11 +453,18 @@ DB Schema
 
 ## 3.1 Implementing Single-Relational Operators
 
+//TODO (CMU lecture 10)
+
+### Sorting
+### Selection
+### Projection, Union and Difference
+### Aggregate Functions
+
 ## 3.2 Join Algorithms
 
 ### Simple Nested Loop
 
-Cost: $M + (m \cdot N) = M + p_T \cdot M \cdot N = 1000 + 100 \cdot 1000 \cdot 500 = 50.001.000$ I/Os  
+**Cost**: $M + (m \cdot N) = M + p_T \cdot M \cdot N = 1000 + 100 \cdot 1000 \cdot 500 = 50.001.000$ I/Os  
 For every tuple in TASK, it scans EMPL once
 
 ```
@@ -476,8 +488,8 @@ Provided we have **B** buffers available.
 ANSWER:=[];
 FOR EACH B - 2 block B_T in TASK DO
   FOR EACH block B_E in EMPL DO
-    FOR EACH tuple t in TASK DO
-      FOR EACH tuple e IN EMPL DO
+    FOR EACH tuple t in B_T DO
+      FOR EACH tuple e IN B_E DO
         IF e.salary<40,000 AND e.marstat='single' AND
           t.tname=‘design' AND t.eno=e.eno 
         THEN ANSWER:+[<e.name>]; 
@@ -609,17 +621,81 @@ _Definition 3.1_
 Tableau $T_1$ is **contained** in tableau $T_2$ ($T_1 \subseteq T_2$) if
 
 1. $T_1$, $T_2$ have the same columns and entries in result rows and
-2. the relation computed from $T_1$ is a subset of the one from $T_2$ for all valid assignments of relations to rows and for all valid database instances.
+2. The relation computed from $T_1$ is a subset of the one from $T_2$ for all valid assignments of relations to rows and for all valid database instances.
 
 _Theorem 3.1_ (Homomorphism Theorem [Abiteboul et al., 1995])  
 $T1 \subseteq T2 \Longleftrightarrow$
-There is a mapping h from the T2 symbols to the T1 symbols with:
-1. h(resulting_row($T_2$))= resulting_row($T_1$)
-2. h(row($T_2$))= any row of $T_1$ with the same relation name
-3. h(constant) = constant
+There is a homomorphism $h: \{\text{variables of } T_1\} \rightarrow \{\text{variables of } T_2\} \cup \{\text{constants}\}$ with:
+1. $h(\text{fixed row }T_2) = \text{fixed row }T_1$
+2. $h(\text{row }T_2)=$ any row of $T_1$ with the same relation name
+3. $h(constant) = constant$
 4. Integrity constraints in $T_2$ are transferred to the respective symbols in $T_1$ and are also guarenteed in $T_1$.
 
 _Theorem 3.2_  
 Two tableaux $T_x$ and $T_y$ are equivalent, denoted as $(T_x \equiv T_y)$ $\Longleftrightarrow T_x \subseteq T_y \land T_y \subseteq T_x$
 
+**Example:**
+
+![](src/tab_ex1.png){ width=350 }
+
+![](src/tab_ex2.png){ width=350 }
+
+![](src/ex3.png){ width=350 }
+![](src/ex4.png){ width=350 }
+
 ### Tableau Minimization
+
+- For each tableau row: delete the row and check equivalence to original tableau
+- Unfortunately, this minimization is NP-complete (no problem for small tableaux)
+
+**Example**:
+
+![](src/min1.png){ width=450 }
+![](src/min2.png){ width=450 }
+![](src/min3.png){ width=350 }
+
+_Theorem 3.3_  
+Every minimal tableau is equivalent to the found tableau (except naming).
+
+- Apply integrity constraints (“knowledge-based optimization” using special reasoners, e.g. chase algorithm) to find minimal equivalent tableau
+- Key constraints / functional dependencies: If left sides of FDs (keys) are equal in 2 tableau rows, then right sides are equal as well.
+- Referential constraints: “pending” rows can be eliminated.
+- Domain constraints: Constant propagation and elimination of unnecessary comparisons
+
+
+## 3.4 Tree-Structured Queries
+
+_Definition 3.2 Semi-Join_  
+$R \ltimes S = \Pi_R (R \bowtie S)$: The join is projected on the left partner $R$.  
+_Theorem 3.4_  
+The result of $R \ltimes S$ is a subset of $R$.  
+Thus, the result of a semi-join program $(...((R \ltimes S ) \ltimes T) \ltimes ...)$ is also a subset of $R$. That means:  
+The complexity of a multiway semi-join grows only linearly with the number of semi-joins ($N\cdot k$ instead of $N^k$) !
+
+### Definitions
+
+**Range terms** “$quant_i r_i \in rel_i$” with $quant_i \in \{ \exists, \forall,\_ \}$,$rel_i \neq \emptyset$, are represented as nodes $k_i$.  
+**Dyadic comparison terms** $d(r_i, r_j)$ are represented as directed edges $k_i \rightarrow k_j$ and labeled with $d(r_i, r_j)$. Is $d(r_i, r_j)$, then the label of the edge is $r_i = r_j$.  
+The **direction** of edge $k_i \rightarrow k_j$ indicates: $SC(r_j) \subseteq SC(r_i)$ i.e. the edge goes from the table that is left on the semijoin to the table that is left e.g. in b) below these semijoins are carried out: $LECTURES \ltimes PROFS$, $PROJECTS \ltimes PROFS$ and $LECTURES \ltimes PROJECTS$
+
+A **path** between two nodes $k_i$ and $k_j$ in the Quant Graph is a sequence of edges connecting the nodes.  
+- **Predicate path**: if all path edges are labeled.
+- **Directed path**: if all pairs of adjacent edges have the same direction (otherwise **undirected**).
+- Cycle (**predicate cycle**): undirected path (predicate path) connecting a node with itself.
+
+### Quant Graphs
+
+- **Strongly connected**: if for all nodes $k_i$ there is an undirected predicate path to every other node $k_j$ of the graph.  
+- **Strictly tree-like**: a strongly connected Quant Graph without cycles (can be directly translated into an equivalent semi-join program).  
+- **Simply tree-like**: a strongly connected Quant Graph without predicate cycles (can often be rewritten into strictly tree-like by exchanging quantifier sequence)  
+- **Cyclic**: a Quant Graph with at least one predicate cycle (only a few special cases can be rewritten into tree-like structure, usually requires full join execution (exponential in the size of the cycle).
+
+![](src/quant.png){ width=400 }
+
+![](src/quant1.png){ width=400 }
+
+![](src/quant2.png){ width=400 }
+
+## 3.5 Cost-based Query Optimization
+
+//TODO
