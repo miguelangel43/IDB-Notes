@@ -777,7 +777,11 @@ $$manager(SSN,N)\text{:- }empl(SSN,N,M,S,D) \land dept(D,DN,SSN)$$
 
 ![](src/datalog_syntax.png){ width=500 }
 
-A **deductive database** consists of a set F of facts, a set R of deduction rules, a set IC of integrity constraints and the set F* of all explicit and derived (implicit) facts.
+### Deductive Databases (DDBs)
+
+A **deductive database** consists of a set F of facts, a set R of deduction rules, a set IC of integrity constraints and the set F* of all explicit and derived (implicit) facts. Deductive Database $D = (F,R,IC)$
+
+![](src/ddb1.png){ width=350 }
 
 - **EDB**: extensional DB
   - Relations defined as a set of facts in F
@@ -788,6 +792,27 @@ A **deductive database** consists of a set F of facts, a set R of deduction rule
   - Derived relations
 
 There are two variations of Datalog. **Datalog**$\neg$, where negation is allowed and **NR-Datalog**, where recursion is not allowed.
+
+**Herbrand Base of D**: all positive ground literals are constructable from predicates in D and constants in D.  
+**Herbrand Model of D**: any subset M of the Herbrand Base of D, such that: each fact from F is contained in M. For each ground instance of a rule in D over constants in D, if M contains all literals in the body, then M contains the head as well. A minimal model does not properly contain any other model. F* is formally defined as the minimal Herbrand model of D.
+
+#### Example (NR-Datalog)
+
+![](src/nr1.png){ width=450 }
+
+#### Least Fixpoint for NR-Datalog
+
+F* is created by the repeated (finite) application of the immediate consequence operator $T_D$ (naive evaluation strategies) starting from F results in derivation of implicit facts from F:
+$$T_D(T_D(....(T_D(F))...))$$
+
+For a subset S of a Herbrand Base the application of $T_D$ to S is defined as:
+$$T_D(S) := \{ H : (H \leftarrow B) \text{ is a ground instance of a rule such that S contains all literals in B}\}$$
+
+**Theorem**: The uniquely determined least fix point of $T_D^*$ is the minimal Herbrand Model of D.
+
+![](src/fix.png){ width=500 }
+
+//TODO
 
 **Integrity constraints** (IC) are conditions that have to be satisfied by a database at any point in time (expressing general laws which cannot be used as derivation rules). **Integrity-checking** tests whether a particular update is going to violate any constraint. The main problem with IC-Tests is that a full evaluation of all ICs before every update would be very expensive and would decrease update performance significantly. The solution is to determine a reduced set of simplified ICs for which the checking guarantees satisfaction of all ICs. This approach leads to a specialization of constraints.
 
@@ -884,7 +909,7 @@ Map-Reduce is a programming pattern for parallel computation in distributed syst
 
 ![](src/map_ex3.png){ width=400 }
 
-### Complex Example (Join between customers and products)
+#### Complex Example (Join between customers and products)
 
 ![](src/map_ex4.png){ width=350 }
 ![](src/map_ex5.png){ width=400 }
