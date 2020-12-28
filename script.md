@@ -407,7 +407,7 @@ Algorithms for Recovery and Isolation Exploiting Semantics. Developed at IBM res
 
 Three main principles must be followed:
 
-1. **Write-Ahead-Logging** (to ensure Atomicity and Durability)Must force the log record for an update before the corresponding data page gets to disk. Must write all log records for a transaction before commit
+1. **Write-Ahead-Logging** (to ensure Atomicity and Durability)Must force the log record for an update before the corresponding data page gets to disk. Must write all log records for a transaction before commit.
 2. **Repeat History During Redo**: repeat ALL actions of the DBMS before a crash, restoring the exact state at the time of the crash.
 3. **Log Changes During Undo**: changes made to the database while undoing a transaction are logged to ensure such an action is not repeated in the event of repeated failures/restarts. This information is written into the log in Compensation Log Records (CLRs).
 
@@ -445,7 +445,7 @@ DB Schema
 
 - Sizes:
   - **M** pages in table TASK (1000), $p_T$ tuples per page in table TASK (100). Each tuple is 40 bytes. **m** is the total number of tuples, $m = p_T \cdot M$
-  - **N** pages in table TASK (500), $p_E$ tuples per page in table EMPL (90). Each tuple is 50 bytes. **n** is the total number of tuples, $n = p_E \cdot N$
+  - **N** pages in table EMPL (500), $p_E$ tuples per page in table EMPL (90). Each tuple is 50 bytes. **n** is the total number of tuples, $n = p_E \cdot N$
 - Costs:
   - **I/O**: costs for fetching 1 page. Cost Metric: # of IOs to compute operation (e.g. Join)
   - **O-Notation** for complexity of operations
@@ -464,7 +464,7 @@ DB Schema
 
 ### Simple Nested Loop
 
-**Cost**: $M + (m \cdot N) = M + p_T \cdot M \cdot N = 1000 + 100 \cdot 1000 \cdot 500 = 50.001.000$ I/Os  
+**Cost**: $M + (m \cdot N) = M + p_M \cdot M \cdot N = 1000 + 100 \cdot 1000 \cdot 500 = 50.001.000$ I/Os  
 For every tuple in TASK, it scans EMPL once
 
 ```
@@ -637,7 +637,6 @@ Two tableaux $T_x$ and $T_y$ are equivalent, denoted as $(T_x \equiv T_y)$ $\Lon
 **Example:**
 
 ![](src/tab_ex1.png){ width=350 }
-
 ![](src/tab_ex2.png){ width=350 }
 
 ![](src/ex3.png){ width=350 }
@@ -678,7 +677,8 @@ The complexity of a multiway semi-join grows only linearly with the number of se
 **Dyadic comparison terms** $d(r_i, r_j)$ are represented as directed edges $k_i \rightarrow k_j$ and labeled with $d(r_i, r_j)$. Is $d(r_i, r_j)$, then the label of the edge is $r_i = r_j$.  
 The **direction** of edge $k_i \rightarrow k_j$ indicates: $SC(r_j) \subseteq SC(r_i)$ i.e. the edge goes from the table that is left on the semijoin to the table that is left e.g. in b) below these semijoins are carried out: $LECTURES \ltimes PROFS$, $PROJECTS \ltimes PROFS$ and $LECTURES \ltimes PROJECTS$
 
-A **path** between two nodes $k_i$ and $k_j$ in the Quant Graph is a sequence of edges connecting the nodes.  
+A **path** between two nodes $k_i$ and $k_j$ in the Quant Graph is a sequence of edges connecting the nodes.
+
 - **Predicate path**: if all path edges are labeled.
 - **Directed path**: if all pairs of adjacent edges have the same direction (otherwise **undirected**).
 - Cycle (**predicate cycle**): undirected path (predicate path) connecting a node with itself.
@@ -698,4 +698,197 @@ A **path** between two nodes $k_i$ and $k_j$ in the Quant Graph is a sequence of
 
 ## 3.5 Cost-based Query Optimization
 
-//TODO
+### Selinger-style query optimization
+
+#### Relational Algebra Equivalences
+
+- Selection:
+  - $\sigma_{c1} \land ... \land _{cn}(R) = \sigma_{c1}(...(\sigma_{cn}(R)...)$
+  - $\sigma_{c1}(\sigma_{c2}(R)) = \sigma_{c2}(\sigma_{c1}(R))$ 
+- Projection:
+  - $\prod_{a1}(R) = \prod_{a1}(...(\prod_{an}(R) ... )$ 
+- Join:
+  - $R \bowtie (S\bowtie T)=(R\bowtie S)\bowtie T$ 
+  - $R\bowtie S=S\bowtie R$
+
+- A projection commutes with a selection that only uses attributes retained by the projection.
+- Selection between attributes of the two arguments of a cross-product converts cross-product to a join:
+$$\sigma_{R.X=S.Y}(R \times S) = R \bowtie_{R.X=S.Y} S$$
+- A selection just on attributes of $R$ commutes with $R \bowtie S$
+$$\sigma_c(R \bowtie S) = \sigma_c(R) \bowtie S$$
+- Similarly, if a projection follows a join $R \bowtie S$, we can 'push' it by retaining only attributes of $R$ (and $S$) that are needed for the join or are kept by the projection.
+
+
+- For each relation $R$:
+  - $B(R)$: number of pages needed to store relation $R$.
+  - $T(R)$: number of tuples of relation $R$
+- For each attribute a of $R$:
+  - $V(R,a)$: number of distinct values that relation $R$ has in attribute $a$.
+
+#### Cost Formulas for Single-relation Queries
+
+![](src/selinger.png){ width=400 }
+
+Since the CPUs are much faster now than in the 80s when the formulas were thought out, we now set the $w$ (weighing factor) to 0. $G$ is the size of an index page.
+
+#### Cost Estimation for Join Strategies
+
+**Example**
+
+![](src/acc1.png){ width=400 }
+![](src/acc2.png){ width=400 }
+![](src/acc3.png){ width=400 }
+![](src/acc4.png){ width=400 }
+![](src/acc5.png){ width=400 }
+![](src/acc6.png){ width=400 }
+![](src/acc7.png){ width=400 }
+![](src/acc8.png){ width=400 }
+![](src/acc9.png){ width=400 }
+![](src/acc10.png){ width=400 }
+![](src/acc11.png){ width=400 }
+
+### Views and Indexes
+
+Long term “investment” in access paths. The idea is to store partial results of queries as index or materialized view in the database.
+
+- **Advantage**: Queries can access pre-computed results
+- **Disadvantages**:
+  - Indexes & Views have to be maintained (higher update costs!) 
+  - Query processing needs to take into account views & indexes
+
+## 3.6 Deductive Queries & Integrity Checking
+
+Some queries cannot be expressed in SQL or relational algebra (e.g. Give me a list of all parts that are required to build the component X) (e.g. Give me a list of all known ancestors of „John Doe“). A language that allows **recursion**, such as **Datalog** is required.
+
+Organizations use **Data Warehouses** (DWHs) to analyze current and historical data to identify useful patterns and support business strategies. The emphasis is on complex, interactive, exploratory analytics of very large datasets created by integrating data from across all parts of an enterprise. Data is fairly static. DWHs are focused on queries rather than updates (read rather than write).
+
+![](src/dwh.png){ width=350 }
+
+### Datalog Syntax
+
+**Rules** are Horn-clauses in the form $p\text{:- }r_1 \land r_2 \land ... \land r_k$, where $p$ and $r_i$ are relation predicates. e.g. 
+
+$$p(X,Y)\text{:- } r_1(X,Z) \land r_2 (Z,Y)$$
+$$manager(SSN,N)\text{:- }empl(SSN,N,M,S,D) \land dept(D,DN,SSN)$$
+
+**Queries** are written either with the head "?-" at the beginning, e.g. $$\text{?- } empl(SSN,N,\_,\_,D) \land dept(D,\text{'computer'},\_)$$, or with the special query predicate, e.g. $$q(X,Y)\text{:- }r_1(X,Z) \land r_2(Z,Y)$$
+
+**Constraints** are rules without head that must be always false, e.g. $\text{:- }empl(S,N,M,Salary,D)\land Salary < 10.000$
+
+![](src/datalog_syntax.png){ width=500 }
+
+A **deductive database** consists of a set F of facts, a set R of deduction rules, a set IC of integrity constraints and the set F* of all explicit and derived (implicit) facts.
+
+- **EDB**: extensional DB
+  - Relations defined as a set of facts in F
+  - Base relations
+  - Set of facts
+- **IDB**: intensional DB
+  - Relations defined by rules in R
+  - Derived relations
+
+There are two variations of Datalog. **Datalog**$\neg$, where negation is allowed and **NR-Datalog**, where recursion is not allowed.
+
+**Integrity constraints** (IC) are conditions that have to be satisfied by a database at any point in time (expressing general laws which cannot be used as derivation rules). **Integrity-checking** tests whether a particular update is going to violate any constraint. The main problem with IC-Tests is that a full evaluation of all ICs before every update would be very expensive and would decrease update performance significantly. The solution is to determine a reduced set of simplified ICs for which the checking guarantees satisfaction of all ICs. This approach leads to a specialization of constraints.
+
+## 3.7 Querying Data Integration Systems
+
+**Data integration** is the problem of providing unified and transparent access to a collection of data stored in multiple, autonomous, and heterogeneous data sources
+
+![](src/di.png){ width=350 }
+
+How to specify the **mapping** between the data sources and the global schema?
+
+- **LAV**(local-as-view):
+The sources are defined in terms of the global schema (i.e. as view on the global schema) – we can thus talk about completeness of sources with respect to global world knowledge
+- **GAV** (global-as-view):
+The global schema is defined in terms of the sources (i.e. as view on the source schemas) – this is more obvious for query processing (view unfolding) but the relationship among the sources (e.g. real-world objects with different ID‘s in the sources) must be explicitly managed
+- **GLAV**(combination of GAV and LAV)
+
+#### Example
+
+Source Schema S
+
+- em50(Title, Year, Director) *European movies since 1950*
+- rv10(Movie, Review) *reviews since 2000*
+
+Global Schema G
+
+- movie(Title, Director, Year)
+- ed(Name,Country,Dob)*(European directors)*
+- rv(Movie, Review)
+
+Query q
+
+```
+SELECT M.title, R.review
+FROM Movie M, RV R
+WHERE M.title=R.title AND M.year = 2010
+```
+
+We have to prove that queries are equivalent or contained in each other:
+
+- **Query Equivalence**: q and q’ are equivalent if they produce the same result for all legal databases
+- **Query Containment**: q is contained in q’ if the result of q is a subset of the result for q’ for all legal databases
+
+#### GAV example
+
+- movie(Title, Director, Year) :- em50(Title, Year, Director).  
+- ed(Name) :- em50(_,_,Name).  
+- rv(Movie, Review) :- rv10(Movie,Review).  
+
+*Note that the global schema will not know that it cannot find reviews and movies over a certain age*
+
+Queries over G can be rewritten as queries over S by unfolding  
+
+- q(Title, Review) :- movie(Title, \_, 2010), rv(Title,Review).  
+- $\Rightarrow$ q'(Title, Review) :- em50(Title, 2010,\_), rv10(Title,Review).
+
+#### LAV example
+
+- em50(Title,Year,Director) :- movie(Title, Director, Year), ed(Director,Country,Dob), Year $\geq$ 1950.
+- rv10(Movie,Review) :- rv(Movie,Review), movie(Movie,Director, Year), Year $\geq$ 2000.
+  
+*Here, the view definition explicitly includes the temporal limitations of knowledge about the real world of movies and reviews, thus informative answers to queries outside the boundaries of this knowledge can be given.*
+
+The idea is to try to cover the predicates of the query by predicates in the bodies of the source views
+
+- q(Title, Review) :- movie(Title, _, Year), rv(Title,Review), Year = 2010.
+  
+*The sources defined as materialized views on the global schema:*
+
+- em50(Title,Year,Director) :- movie(Title, Director, Year), ed(Director,Country,Dob), Year ≥ 1950.
+- rv10(Movie,Review) :- rv(Movie, Review), movie(Movie, Director, Year), Year ≥ 2000.
+
+*Answering queries using these views:*
+
+- qrewritten(Title, Review) :- rv10(Title,Review), em50(Title,Year,_), Year = 2010.
+
+
+# 4. Big Data & Internet Information Systems
+
+## 4.1 Query Processing in Big Data Systems
+
+### Map-Reduce
+
+Map-Reduce is a programming pattern for parallel computation in distributed system. It is defined by two functions:
+
+- **Map(data) $\rightarrow$ (key,value)**: it reads the input data and emits key-value pairs. Note that the keys are not necessarily unique in emitted pairs.
+
+- **Reduce(key,values) $\rightarrow$ (key,values)**: it gets input from Map function, which is a set of values for a single key. Note that the input and output structure should be the same and that some implementations require that output is a single value. Furthermore, Reduce can be called multiple times for the same key.
+ 
+#### Simple Example (in MongoDB syntax)
+
+![](src/map_ex1.png){ width=400 }
+![](src/map_ex2.png){ width=400 }
+
+![](src/map_ex3.png){ width=400 }
+
+### Complex Example (Join between customers and products)
+
+![](src/map_ex4.png){ width=350 }
+![](src/map_ex5.png){ width=400 }
+
+![](src/map_ex6.png){ width=400 }
+
+## 4.2 Data Management in the Cloud
