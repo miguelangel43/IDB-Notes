@@ -814,6 +814,19 @@ $$T_D(S) := \{ H : (H \leftarrow B) \text{ is a ground instance of a rule such t
 
 //TODO
 
+The program is **stratified** (or layered) if the predicates “call” each other in a hierarchical order. No two predicates in a layer (stratum) depend negatively on each other. If a predicate p depends on a negative predicate r, then r is in a lower layer. If application of $T_D$ is done layer by layer, the least fixpoint of D is consequently the natural Herbrand model.
+
+It follows therefore: 
+
+1. layer: $F$
+2. layer: $F \cup \{t(b)\}$
+3. layer: $F \cup \{t(b)\} \cup \{p(b)\}$ 
+<!-- The math above works when exported (at least to .docx) -->
+
+![](src/strat.png){ width=150 }
+
+//TODO
+
 **Integrity constraints** (IC) are conditions that have to be satisfied by a database at any point in time (expressing general laws which cannot be used as derivation rules). **Integrity-checking** tests whether a particular update is going to violate any constraint. The main problem with IC-Tests is that a full evaluation of all ICs before every update would be very expensive and would decrease update performance significantly. The solution is to determine a reduced set of simplified ICs for which the checking guarantees satisfaction of all ICs. This approach leads to a specialization of constraints.
 
 ## 3.7 Querying Data Integration Systems
