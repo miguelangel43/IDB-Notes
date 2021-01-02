@@ -800,7 +800,11 @@ There are two variations of Datalog. **Datalog**$\neg$, where negation is allowe
 
 ![](src/nr1.png){ width=450 }
 
-#### Least Fixpoint for NR-Datalog
+The minimal Herbrand model $M_1$ contains all the relations in $F$ and p(a) because we can construct it with the rule p(X) $\leftarrow$ q(X,Y), t(Y) this way p(a) $\leftarrow$ q(a,b), t(b). As you can see, q(a,b) and t(b) are in $F$.
+
+Only the derivations in blue (in the last bulletpoint) would work.
+
+### Least Fixpoint for NR-Datalog
 
 F* is created by the repeated (finite) application of the immediate consequence operator $T_D$ (naive evaluation strategies) starting from F results in derivation of implicit facts from F:
 $$T_D(T_D(....(T_D(F))...))$$
@@ -808,11 +812,35 @@ $$T_D(T_D(....(T_D(F))...))$$
 For a subset S of a Herbrand Base the application of $T_D$ to S is defined as:
 $$T_D(S) := \{ H : (H \leftarrow B) \text{ is a ground instance of a rule such that S contains all literals in B}\}$$
 
-**Theorem**: The uniquely determined least fix point of $T_D^*$ is the minimal Herbrand Model of D.
-
 ![](src/fix.png){ width=500 }
 
-//TODO
+**Theorem**: The uniquely determined least fix point of $T_D^*$ is the minimal Herbrand Model of D.
+
+#### Example
+
+**R**  
+q(X) :- r(X,Y), NOT b(X).  
+r(X,Y) :- c(X,Y), b(Y).  
+r(X,Y) :- c(X,Z), r(Z,Y).  
+
+**F**  
+c(1,2), b(3), c(2,3), b(4), c(1,4).
+
+Solution:
+
+$F_0$ = {c(1,2), c(2,3), c(1,4), b(3), b(4)} fact base  
+$T_D(F_0)$={r(2,3),r(1,4)} $\cup F_0 = F_1$  
+$T_D(F_1)$ = {q(1), q(2), r(1,3)} $\cup F_1 = F_2$  
+$T_D(F_2)$ = {} Fixpoint reached !
+
+#### Example with negation
+
+If negation occurs in the body of a rule, then there may be no unique minimal Herbrand model any more. Which one is the “natural model” of D, and thus represents the intended semantics of D?
+
+![](src/datneg.png){ width=450 }
+![](src/datneg2.png){ width=400 }
+
+#### Stratification
 
 The program is **stratified** (or layered) if the predicates “call” each other in a hierarchical order. No two predicates in a layer (stratum) depend negatively on each other. If a predicate p depends on a negative predicate r, then r is in a lower layer. If application of $T_D$ is done layer by layer, the least fixpoint of D is consequently the natural Herbrand model.
 
@@ -824,6 +852,25 @@ It follows therefore:
 <!-- The math above works when exported (at least to .docx) -->
 
 ![](src/strat.png){ width=150 }
+
+#### Example Least Fixpoint for Recursive Stratified DATALOG$\neg$ Programs
+
+The recursion leads possibly to more than one application of TD per layer. If negations do not occur in the recursion cycle, there will be no problem.
+
+![](src/datex1.png){ width=450 }
+
+#### Example Non-stratified DATALOG$\neg$ Programs
+
+Negation in the recursion cycle violates the stratification condition.
+
+![](src/datex2.png){ width=450 }
+![](src/datex3.png){ width=380 }
+
+#### Are these programs stratisfied?
+
+![](src/arestrat.png){ width=450 }
+
+#### Bottom-Up vs. Top-Down Evaluation
 
 //TODO
 
