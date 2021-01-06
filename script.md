@@ -24,6 +24,19 @@
 
 ## 1.3 Distributed Database Systems
 
+A **distributed database (DDB)** is a collection of multiple, logically interrelated databases distributed over a computer network. The software system that permits the management of the distributed database and makes the distribution transparent to the users is called **distributed database management system (D–DBMS)**. **Transparency** is the separation of higher level semantics of a system from the lower level implementation issues. A fundamental issue in DDBs is to provide **data independence** in the distributed environment. Many times scalability is achieved at the expense of consistency.
+
+a distributed database system (DDBS) is the conjuction of both. **DDBS = DDB + D–DBMS**
+
+Some of the promises of D-DBMS are: 
+
+- A **transparent** management of distributed, fragmented, and replicated datal
+- Improved **reliability**/availability through distributed transactions.
+- Improved **performance**.
+- Easier and more **economical** system expansion $\rightarrow$ Scalability.
+
+An **Information Resource Dictionary** is a shareable repository for a definition of the information resources relevant to all or part of an enterprise. 
+
 # 2. Advanced Transaction Management
 
 ## 2.1 Definitions
@@ -261,7 +274,7 @@ $\varepsilon (S2PL) \subseteq CSR \cap ST$
 - Each transaction can choose the suitable granularity by itself. (in the example below: record file, table space, area, database) (You can choose to lock the entire File 1 or Area 2 for example)(If something below is locked, you can't lock above, that's where intention locks come in handy)
 - The scheduler must then prevent transactions from setting conflicting locks in overlapping granularities.  
   
-If the database is tree-structured, two provisions are helpful :
+If the database is tree-structured, two provisions are helpful:
 - Distinction between explicit and implicit locks (higher-level locks implicitly lock also lower level objects)
 - Propagation of locks in tree upwards as **intention locks** ($irl$, $iwl$, $riwl$)
 
@@ -399,19 +412,17 @@ Direct consequence:
 - For No-REDO: ensure that all After-Images of a transaction are written in the database before or during the commit.
 - For No-UNDO: ensure,that no After-Image of a transaction is written into the database (but only the log) before the commit.
 
+#### UNDO/REDO Protocol
+
+The RM does not control the buffer manager with respect to the writing of pages into the database. That is, it depends on the page replacement strategies of operating systems, when to execute a flush operation of buffers, e.g., by Demand Paging:
+
+- A write operation writes in (log and) buffer page p
+- If p is replaced (written into the database) and the concerning transaction aborts, UNDO is necessary
+- If a transaction reaches its commit and p is damaged by a crash before a flush, REDO is necessary
+
 ### ARIES
 
-//TODO (CMU lecture 21)
-
-Algorithms for Recovery and Isolation Exploiting Semantics. Developed at IBM research in early 1990s.
-
-Three main principles must be followed:
-
-1. **Write-Ahead-Logging** (to ensure Atomicity and Durability)Must force the log record for an update before the corresponding data page gets to disk. Must write all log records for a transaction before commit.
-2. **Repeat History During Redo**: repeat ALL actions of the DBMS before a crash, restoring the exact state at the time of the crash.
-3. **Log Changes During Undo**: changes made to the database while undoing a transaction are logged to ensure such an action is not repeated in the event of repeated failures/restarts. This information is written into the log in Compensation Log Records (CLRs).
-
-Fields of a log record: (so that we don't have to copy the whole page into the log)
+Algorithms for Recovery and Isolation Exploiting Semantics. Developed at IBM research in early 1990s. The log record contains the following fields (so that we don't have to copy the whole page into the log):
 
 - LSN (Log Sequence Number, ID for a Log record)
 - TransactionID
@@ -422,20 +433,44 @@ Fields of a log record: (so that we don't have to copy the whole page into the l
 - old data
 - new data
 
+Steps of the process of recovery after a crash:
+
+1. **Analysis**: Identify dirty pages in the buffer and active transactions at the time of the crash.
+2. **Redo**: Repeat all actions from the log, starting from the first action which made a page dirty. Restores the database state to what it was at the time of the crash.
+3. **Undo**: Undo transactions that did not commit, so that DB reflects only committed transactions
+
+Three main principles must be followed:
+
+1. **Write-Ahead-Logging** (to ensure Atomicity and Durability) Must force the log record for an update before the corresponding data page gets to disk. Must write all log records for a transaction before commit.
+2. **Repeat History During Redo**: repeat ALL actions of the DBMS before a crash, restoring the exact state at the time of the crash.
+3. **Log Changes During Undo**: changes made to the database while undoing a transaction are logged to ensure such an action is not repeated in the event of repeated failures/restarts. This information is written into the log in Compensation Log Records (CLRs).
+
+Periodically, the DBMS creates a **checkpoint**, in order to minimize the time taken to recover in the event of a system crash. The following is written to the log:
+
+1. **Begin checkpoint record**: Indicates the start of checkpointing
+2. **End checkpoint record**: current transaction table and DPT (as at the time of „begin checkpoint“ record is written)
+3. **Master Record**: store LSN of the "begin checkpoint" record in a safe place in stable storage.
+
+This is called a „**Fuzzy Checkpoint**“. It is inexpensive, because not all pages in the buffer have to be written to disk. But it is limited by oldest unwritten change in a dirty page. Thus, flushing dirty pages periodically is a good idea. Other transactions can run concurrently to checkpointing.
+
+#### Example (Crash Recovery Using Fuzzy Checkpoints)
+
+![](src/fuzz.png){ width=300 }
+
 
 ## 2.8 Distributed Transactions and the CAP Theorem
-//TODO
 
+![](src/dtcap.png){ width=450 }
+
+### CAP Theorem
+
+Only two of the following can be achieved together: **C**onsistency, **A**vailability, and Tolerance to Network **P**artitions. Therefor, we must choose between consistency and availability in a network partition.
 
 # 3. Relational Queries
-
-
 
 ![](src/ev_chain.png){ width=280 }
 
 In this chapter the **query evaluation chain** is introduced and it is discussed how clustering and/or indexing can influence the algorithms. First we present the running example that will be used throughout this chapter.
-
-
 
 DB Schema
 
@@ -455,10 +490,10 @@ DB Schema
 
 //TODO (CMU lecture 10)
 
-### Sorting
+<!-- ### Sorting
 ### Selection
 ### Projection, Union and Difference
-### Aggregate Functions
+### Aggregate Functions -->
 
 ## 3.2 Join Algorithms
 
@@ -870,11 +905,57 @@ Negation in the recursion cycle violates the stratification condition.
 
 ![](src/arestrat.png){ width=450 }
 
-#### Bottom-Up vs. Top-Down Evaluation
+### Bottom-Up vs. Top-Down Evaluation
 
-//TODO
+**Bottom-Up** (Forward Chaining):
+
+- Generation of implicit facts at evaluation-time.
+- Evaluation of the query against temporarily materialized implicit databases. (direct implementation of least fixpoint computation).
+- Drawback: when materializing F*, the particular query Q is not considered $\rightarrow$ many irrelevant answers and intermediate results may be generated.
+  
+**Top-Down** (Backward Evaluation):
+
+- Generation of subqueries until queries to base relations are reached.
+- Evaluation of base subqueries against F and upward propagation of answers to the top query.
+- As opposed to bottom-up approach: constants in top query and subqueries are passed downwards and provide restrictions while evaluating base queries.
+- Drawback: inefficient (or not terminating) for recursive queries.
+
+#### Example
+
+![](src/bu1.png){ width=350 }
+![](src/bu2.png){ width=350 }
+
+### Integrity Constraints
 
 **Integrity constraints** (IC) are conditions that have to be satisfied by a database at any point in time (expressing general laws which cannot be used as derivation rules). **Integrity-checking** tests whether a particular update is going to violate any constraint. The main problem with IC-Tests is that a full evaluation of all ICs before every update would be very expensive and would decrease update performance significantly. The solution is to determine a reduced set of simplified ICs for which the checking guarantees satisfaction of all ICs. This approach leads to a specialization of constraints.
+
+#### Example
+
+inconsistent $\leftarrow$ employee(X), works_for(X,X)  
+(original constraint: no employee works for himself)
+
+insert works_for(john, jim)  
+delete employee(X) where works_for(X, john)
+
+#### Constraint Especialization
+
+Input:
+
+- Update U={delete L, insert L}
+- Integrity constraints IC (satisfied before the update)
+  
+1. IC is affected by U, if IC contains a literal L* that is unifiable with L (resp. NOT L), if U is an insertion (resp. deletion).
+2. For every such L*, IC$_\sigma$ is a relevant instance of IC with respect to U. (where $\sigma$ is a most-general-unifier of L and L*)
+3. Simplified relevant instances of IC with respect to U are obtained by deleting L* from relevant instances.
+
+#### Example
+
+insert p(a,b)  (IC affected)
+inconsistent $\leftarrow$ p(a,b), NOT s(a)  
+delete p(a,b)  
+insert s(a)  
+delete s(a)  (IC affected)  
+inconsistent $\leftarrow$  p(a,Y), NOT s(a)
 
 ## 3.7 Querying Data Integration Systems
 
