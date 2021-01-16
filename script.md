@@ -1061,6 +1061,10 @@ Abstract languages that support algebra operations (join, selection, projection,
 
 - **Pig Latin**: it is a procedural language with algebra-like operations.
 
+Example: Find the top 10 most visited pages in each
+category
+
+![](src/pig_ex.PNG){ width=300 }
 ![](src/pig.PNG){ width=400 }
 
 - **Hive**: it is a data warehouse software for large datasets in distributed storage.
@@ -1068,3 +1072,59 @@ Abstract languages that support algebra operations (join, selection, projection,
 ![](src/hive.PNG){ width=400 }
 
 ## 4.2 Data Management in the Cloud
+
+#### RDBMS
+
+Relational Database Management System. A DBMS designed specifically for relational databases.
+
+Simple & efficient data model
+
+- Relations, tuples, keys, foreign keys, …
+- Standardized for more than 20 years
+
+Expressive query & update language
+
+- Enables complex queries with aggregates, functions, …
+- Updates can be based on query results
+  
+Powerful transaction management
+
+- Enables concurrent access by multiple users & applications
+- ACID principle guarantees Atomicity, Consistency, Isolation, and Durability of transactions
+
+Basis for application integration
+
+- Applications use the same shared database instance
+
+#### Sharding
+
+The process of distributing disjoint subsets of the data to different servers. It increases the performance of reads and writes.
+
+- Related data should be stored in one server
+- Data should be evenly distributed between servers
+- NoSQL systems support auto-sharding, which requires definition of a shard-key
+- Sharding can be combined with replication
+
+![](src/sharding.PNG){ width=400 }
+
+### NoSQL Databases
+
+Proposed as a simple, scalable data management systems. The system does NOt provide a SQL interface (Not Only SQL).
+
+Data Models of NoSQL Systems
+
+- **Key-Value Data Model**: keys identify objects and objects can be linked to other keys. The Access is mainly done be the keys. Systems: Redis, Riak...
+
+![](src/key_model.PNG){ width=200 }
+
+- **Document-oriented Data Model**: a document is a list of attribute-value pairs with possible nesting. The model is semi-structured, often represented in JSON. It can be efficiently queried with indexes. Systems: MongoDB, CouchDB...
+
+![](src/doc_model.PNG){ width=200 }
+
+- **Graph Data Model**: graphs with nodes and edges.
+
+## 4.3 Big Data Architectures & Systems
+
+### Hadoop
+### Spark
+### Kafka
