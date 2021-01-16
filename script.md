@@ -1,4 +1,4 @@
-[[TOC]]
+
 
 # 1. Architecture of Database Systems
 
@@ -1056,5 +1056,15 @@ Map-Reduce is a programming pattern for parallel computation in distributed syst
 ![](src/map_ex5.png){ width=400 }
 
 ![](src/map_ex6.png){ width=400 }
+
+Abstract languages that support algebra operations (join, selection, projection, groupby...) are required to implement data transformations and queries. We have a look at two Apache high-level languages that are compiled into MapReduce jobs.
+
+- **Pig Latin**: it is a procedural language with algebra-like operations.
+
+![](src/pig.PNG){ width=400 }
+
+- **Hive**: it is a data warehouse software for large datasets in distributed storage.
+
+![](src/hive.PNG){ width=400 }
 
 ## 4.2 Data Management in the Cloud
