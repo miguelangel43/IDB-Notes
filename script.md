@@ -226,8 +226,9 @@ Techniques with which a DBMS can generate correct schedules for transactions to 
 ### Locking Scheduler
 
 The scheduler can apply locks for the synchronization of accesses on data objects that are used together. There are two types of locks for an object x:
+
 - Read lock: rl(x) *read lock*, ru(x) *read unlock*
-- Write lock: wl(x) *read lock*, wu(x) *read unlock*
+- Write lock: wl(x) *write lock*, wu(x) *write unlock*
 
 **Rules for the application of locks**  
 For each $t_i$, which is contained completely in a schedule $s$, the following should be valid:
@@ -260,6 +261,7 @@ $s_2$ is 2PL
 $\varepsilon (2PL) \subseteq CSR$
 
 **Variants of 2PL**
+
 - Conservative 2PL : All locks are available since BOT
 - Strict 2PL (S2PL): Hold all write locks till EOT
 - Strong 2PL (SS2PL): Hold all locks till EOT
