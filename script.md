@@ -1163,10 +1163,33 @@ And its main features are:
 
 ![](src/namenodes.PNG){ width=400 }
 
-**Lambda Architecture**: the goal is all-time availability of all processed data while keeping up performance. To that end, the advantages of data warehouses and realtime transaction processing are combined. A batch layer (append raw data) and a speed layer (recent data only, stores and updates real time views) are used.
+#### Lambda Architecture
+The goal is all-time availability of all processed data while keeping up performance. To that end, the advantages of data warehouses and realtime transaction processing are combined. The architecture is formed by a three layers.
+
+A **batch layer**, where raw data is appended, and a **speed layer** that only stores recent data and stores and updates real time views, are used.
+The incoming data is dispatched to the batch layer and the speed layer. Then, functions on both layers prepare views on the serving layer, so that users can query the merged results.
+
+- The **batch layer** manages the master dataset, an immutable, append-only set or raw data. It also precomputes the batch views throught the batch function, which is **MapReduce**.
+- The **speed layer** stores and updates real-time views only
+- The **serving layer** maintains and indexes batch views, combines batch and real-time views and provides ad-hoc query access to all data.
+
+![](src/lambda.png){ width=300 }
 
 ### Apache Spark
 
-It is an **Open Source Cluster Computing Framework** that uses a distributed data structure called RDD (Resilient Distributed Dataset)
+It is an Open Source Cluster Computing Framework that uses a distributed data structure called **RDD (Resilient Distributed Dataset)**
+
+**Resilient Distributed Datasets (RDD)** is a fundamental data structure of Spark. It is an immutable distributed collection of objects. Each dataset in RDD is divided into logical partitions, which may be computed on different nodes of the cluster.
+
+Two types of operations on RDDs:
+
+- **Transformations** (e.g., filter, group, sort, join, etc.) These are lazy, i.e. the result is not computed directly, only when an action is performed. The transformations applied to one dataset are recorded.
+- **Actions** (e.g., aggregation, reduce, output, foreach)
+
+RDDs can be **persisted**, this means that the data survives after the process with which it was created has ended. In other words, for a data store to be considered persistent, it must write to non-volatile storage.
+
+The data within an RDD is split into several **partitions**.
+
+**Shuffling** moves RDDs between different nodes of a cluster.
 
 ### Kafka
