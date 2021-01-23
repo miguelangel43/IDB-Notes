@@ -1109,6 +1109,12 @@ The process of distributing disjoint subsets of the data to different servers. I
 
 ![](src/sharding.PNG){ width=400 }
 
+#### Replication
+
+The process of copying data from a central database to one or more databases. It can be inefficient for distributed web applications and lead to inconsistencies, as clients may see inconsistent intermediate data, because changes are replicated with a delay.
+
+![](src/repli.PNG){ width=400 }
+
 ### NoSQL Databases
 
 Proposed as a simple, scalable data management systems. The system does NOt provide a SQL interface (Not Only SQL).
@@ -1123,10 +1129,44 @@ Data Models of NoSQL Systems
 
 ![](src/doc_model.PNG){ width=200 }
 
-- **Graph Data Model**: graphs with nodes and edges.
+- **Graph Data Model**: graphs with nodes and edges. Queries traverse graph structure. Stronger consistency and transaction model than in other NoSQL systems.
+
+![](src/graph_dm.PNG){ width=400 }
+
+- **Column-Oriented Data Model**: similar to key-value data model, but with multiple maps. One map for different column families. Not just the Relational Data Model with a column-oriented storage.
 
 ## 4.3 Big Data Architectures & Systems
 
+Parallel DBMS dominate the market for large scale data processing. They have shared-nothing architecture, horizontal partitioning, massive parallel processing technology (MPP), well-designed schema and distribution, declarative query processing with SQL, transaction management based on ACID and parallelization & distribution is transparent for user.
+
 ### Hadoop
-### Spark
+
+It was inspired by Google‘s work on GFS (Google File System) and MapReduce. Facebook and Last.fm use it. Its major components are:
+
+- MapReduce for efficient distributed computation
+- HDFS (Hadoop File System) as distributed file system or data store
+- YARN for resource management
+
+And its main features are:
+
+- Basic file system functionality
+  - block-oriented storage of arbitrary files in hierarchical directory structure
+- Storage of large files across multiple machines
+- Immutable files: write-once-read-many
+- Replication of data: by default, each data block is replicated three times
+- Fault-tolerant
+- Designed to be deployed on low-cost hardware §Batch-oriented data processing
+- Computation is done „close to the data“ ($\rightarrow$ MapReduce) 
+- Implemented in Java to be available on multiple platforms
+
+**NameNodes** manage the metadata in HDFS (Hadoop Distributed File System). Data blocks are stored in **DataNodes**.
+
+![](src/namenodes.PNG){ width=400 }
+
+**Lambda Architecture**: the goal is all-time availability of all processed data while keeping up performance. To that end, the advantages of data warehouses and realtime transaction processing are combined. A batch layer (append raw data) and a speed layer (recent data only, stores and updates real time views) are used.
+
+### Apache Spark
+
+It is an **Open Source Cluster Computing Framework** that uses a distributed data structure called RDD (Resilient Distributed Dataset)
+
 ### Kafka
